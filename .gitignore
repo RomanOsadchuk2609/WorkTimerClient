@@ -1,0 +1,8 @@
+/src/main/java/osadchuk/rememberedInfo/
+.idea/
+out/
+target/
+timer.iml
+hs_err_pid20393.log
+timer.properties
+timer.xml
