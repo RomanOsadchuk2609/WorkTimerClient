@@ -1,4 +1,4 @@
-package valltimer.model;
+package osadchuk.worktimer.model;
 
 public class NotSentData {
     private long timerId;

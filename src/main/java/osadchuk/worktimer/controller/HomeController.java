@@ -1,4 +1,4 @@
-package valltimer.controller;
+package osadchuk.worktimer.controller;
 
 import com.google.gson.Gson;
 import com.jfoenix.controls.*;
@@ -30,13 +30,13 @@ import javafx.stage.WindowEvent;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import sun.misc.BASE64Encoder;
-import valltimer.Utils;
-import valltimer.entity.PrimitiveUser;
-import valltimer.entity.Task;
-import valltimer.entity.Timer;
-import valltimer.model.NotSentData;
-import valltimer.model.TreeViewHelper;
-import valltimer.webRequest.HTTPRequest;
+import osadchuk.worktimer.Utils;
+import osadchuk.worktimer.entity.PrimitiveUser;
+import osadchuk.worktimer.entity.Task;
+import osadchuk.worktimer.entity.Timer;
+import osadchuk.worktimer.model.NotSentData;
+import osadchuk.worktimer.model.TreeViewHelper;
+import osadchuk.worktimer.webRequest.HTTPRequest;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

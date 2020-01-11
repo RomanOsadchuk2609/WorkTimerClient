@@ -20,7 +20,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="450.0" prefWidth="325.0" style="-fx-background-color: white;" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="valltimer.controller.HomeController">
+<AnchorPane prefHeight="450.0" prefWidth="325.0" style="-fx-background-color: white;" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="osadchuk.worktimer.controller.HomeController">
    <children>
       <JFXToolbar prefHeight="50.0" prefWidth="325.0" styleClass="jfx-tool-bar-top">
          <center>

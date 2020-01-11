@@ -1,4 +1,4 @@
-package valltimer.entity;
+package osadchuk.worktimer.entity;
 
 public class PrimitiveUser {
     private long id;

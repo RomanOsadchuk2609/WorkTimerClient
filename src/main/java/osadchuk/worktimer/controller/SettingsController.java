@@ -1,4 +1,4 @@
-package valltimer.controller;
+package osadchuk.worktimer.controller;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTextField;
@@ -8,12 +8,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import valltimer.Utils;
+import osadchuk.worktimer.Utils;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 

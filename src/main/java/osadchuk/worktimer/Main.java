@@ -1,4 +1,4 @@
-package valltimer;
+package osadchuk.worktimer;
 
 import com.sun.deploy.uitoolkit.impl.fx.HostServicesFactory;
 import com.sun.javafx.application.HostServicesDelegate;

@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="anchorPane" prefHeight="450.0" prefWidth="325.0" style="-fx-background-color: white;" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="valltimer.controller.LoginController">
+<AnchorPane fx:id="anchorPane" prefHeight="450.0" prefWidth="325.0" style="-fx-background-color: white;" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="osadchuk.worktimer.controller.LoginController">
    <children>
       <Pane fx:id="paneMain" prefHeight="450.0" prefWidth="325.0">
          <children>

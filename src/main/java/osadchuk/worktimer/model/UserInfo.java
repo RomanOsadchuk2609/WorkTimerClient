@@ -1,4 +1,4 @@
-package valltimer.model;
+package osadchuk.worktimer.model;
 
 import java.io.Serializable;
 

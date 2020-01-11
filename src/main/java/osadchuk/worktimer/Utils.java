@@ -1,4 +1,4 @@
-package valltimer;
+package osadchuk.worktimer;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -7,13 +7,13 @@ import javafx.embed.swing.SwingFXUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.security.core.Authentication;
+import osadchuk.worktimer.controller.HomeController;
+import osadchuk.worktimer.controller.SettingsController;
+import osadchuk.worktimer.entity.SimpleTask;
+import osadchuk.worktimer.entity.Timer;
+import osadchuk.worktimer.webRequest.HTTPRequest;
 import sun.misc.BASE64Decoder;
-import valltimer.controller.HomeController;
-import valltimer.controller.SettingsController;
-import valltimer.entity.PrimitiveUser;
-import valltimer.entity.SimpleTask;
-import valltimer.entity.Timer;
-import valltimer.webRequest.HTTPRequest;
+import osadchuk.worktimer.entity.PrimitiveUser;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

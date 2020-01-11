@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="450.0" prefWidth="325.0" style="-fx-background-color: white;" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="valltimer.controller.SettingsController">
+<AnchorPane prefHeight="450.0" prefWidth="325.0" style="-fx-background-color: white;" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="osadchuk.worktimer.controller.SettingsController">
    <children>
       <JFXToolbar prefHeight="50.0" prefWidth="325.0" styleClass="jfx-tool-bar-top">
          <right>

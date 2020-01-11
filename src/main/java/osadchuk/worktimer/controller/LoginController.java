@@ -1,4 +1,4 @@
-package valltimer.controller;
+package osadchuk.worktimer.controller;
 
 import com.jfoenix.controls.*;
 import com.sun.javafx.application.HostServicesDelegate;
@@ -23,11 +23,10 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import osadchuk.worktimer.entity.SimpleTask;
+import osadchuk.worktimer.webRequest.HTTPRequest;
 import sun.misc.BASE64Encoder;
-import valltimer.Main;
-import valltimer.Utils;
-import valltimer.entity.SimpleTask;
-import valltimer.webRequest.HTTPRequest;
+import osadchuk.worktimer.Utils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -36,7 +35,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 import java.io.*;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.*;
 import java.util.List;
 import java.util.prefs.Preferences;

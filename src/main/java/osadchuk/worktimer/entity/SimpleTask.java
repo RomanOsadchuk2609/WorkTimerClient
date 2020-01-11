@@ -1,4 +1,4 @@
-package valltimer.entity;
+package osadchuk.worktimer.entity;
 
 import java.io.Serializable;
 import java.util.Objects;

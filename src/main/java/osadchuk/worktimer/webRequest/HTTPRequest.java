@@ -1,4 +1,4 @@
-package valltimer.webRequest;
+package osadchuk.worktimer.webRequest;
 
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
@@ -9,15 +9,13 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import valltimer.Utils;
+import osadchuk.worktimer.Utils;
 
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-
-import javax.servlet.http.*;
 
 
 public class HTTPRequest {

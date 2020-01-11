@@ -1,17 +1,15 @@
-package valltimer.model;
+package osadchuk.worktimer.model;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.stream.Collectors;
 
 import javafx.scene.control.TreeItem;
-import valltimer.Utils;
-import valltimer.entity.Project;
-import valltimer.entity.SimpleTask;
-import valltimer.entity.Task;
+import osadchuk.worktimer.Utils;
+import osadchuk.worktimer.entity.Project;
+import osadchuk.worktimer.entity.SimpleTask;
+import osadchuk.worktimer.entity.Task;
 
 public class TreeViewHelper{
 
