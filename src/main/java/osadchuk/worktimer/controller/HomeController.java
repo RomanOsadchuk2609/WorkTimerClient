@@ -2,8 +2,6 @@ package osadchuk.worktimer.controller;
 
 import com.google.gson.Gson;
 import com.jfoenix.controls.JFXButton;
-import com.jfoenix.controls.JFXDialog;
-import com.jfoenix.controls.JFXDialogLayout;
 import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXToolbar;
@@ -12,7 +10,6 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -24,15 +21,12 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import osadchuk.worktimer.Utils;
@@ -41,6 +35,7 @@ import osadchuk.worktimer.entity.Task;
 import osadchuk.worktimer.entity.Timer;
 import osadchuk.worktimer.model.NotSentData;
 import osadchuk.worktimer.model.TreeViewHelper;
+import osadchuk.worktimer.util.ErrorDialogFactory;
 import osadchuk.worktimer.util.TimerConstants;
 import osadchuk.worktimer.webRequest.HTTPRequest;
 import sun.misc.BASE64Encoder;
@@ -92,10 +87,8 @@ public class HomeController {
     private AnchorPane peopleAnchorPane, timerPane, chatPane;
 
     private TreeViewHelper treeViewHelper;
-
     private String lastSearchedUsername = "";
     private Date lastTaskUpdate;
-
     private boolean lastUtilsIsWorkStartedValue, isStarted, isWorkStarted, sendScreenShot, randomScreenshot, isCheating;
     private Date startDate, lastScreenShotTime, lastStopRequestTime;
     private LocalTime workedTime;
@@ -113,7 +106,7 @@ public class HomeController {
     }
 
     @FXML
-    void initialize() throws IOException, URISyntaxException {
+    void initialize() throws IOException {
         //Platform.setImplicitExit(false);
         new SendNotSentDataThread().start();
 
@@ -121,7 +114,6 @@ public class HomeController {
         sendScreenShot = false;
         randomScreenshot = false;
         screenShotInterval = 5 * 60 * 1000;//5 minutes
-
 
         Properties settings = new Properties();
             /*File file = new File(getClass().getResource("/public/config/settings.conf").toURI());
@@ -132,7 +124,6 @@ public class HomeController {
         initialScreenshotInterval = Long.valueOf(settings.getProperty("screenShotInterval"));
         screenShotInterval = initialScreenshotInterval;
         System.out.println("screenShotInterval = " + screenShotInterval);
-
 
         if (randomScreenshot) {
             screenShotInterval = Math.random() * initialScreenshotInterval;
@@ -166,10 +157,7 @@ public class HomeController {
                 new PrimitiveUser(9, "user 8")
         ));
         showFoundUsers(primitiveUsers);
-
-
         at.start();
-
     }
 
     private AnimationTimer at = new AnimationTimer() {
@@ -178,13 +166,11 @@ public class HomeController {
         @Override
         public void handle(long now) {
             if (now - lastUpdate > 1_000_000) {
-                if (new Date().getTime() - lastTaskUpdate.getTime() > (1 * 60 * 1000) && !isWorkStarted) {// > 1 minute
+                if (new Date().getTime() - lastTaskUpdate.getTime() > (60 * 1000) && !isWorkStarted) {// > 1 minute
                     lastTaskUpdate = new Date();
                     try {
                         Utils.updateSimpleTaskList(false);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (URISyntaxException e) {
+                    } catch (IOException | URISyntaxException e) {
                         e.printStackTrace();
                     }
                     //showTaskTreeView();
@@ -246,21 +232,11 @@ public class HomeController {
                         String response = null;
                         try {
                             response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/stop", parametersPost, Utils.JSESSIONID);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (URISyntaxException e) {
+                        } catch (IOException | URISyntaxException e) {
                             e.printStackTrace();
                         }
                         //String response = "";
-                        Pattern number = Pattern.compile("\\d+");
-                        boolean isNumber = false;
-                        if (response != null) {
-                            Matcher matcher = number.matcher(response);
-                            isNumber = matcher.matches();
-                        }
-                        if (response == null || isNumber) {
-                            saveDataAndGoToLoginScreen(endDate);
-                        }
+                        validateResponse(response, endDate);
                     }
 
                     if (!isCheating && sendScreenShot && (screenTime.getTime() - lastScreenShotTime.getTime() > screenShotInterval)) {
@@ -278,13 +254,7 @@ public class HomeController {
                                 String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/save_screenshot", parametersPost, Utils.JSESSIONID);
                                 Pattern number = Pattern.compile("\\d+");
                                 boolean isNumber = false;
-                                if (response != null) {
-                                    Matcher matcher = number.matcher(response);
-                                    isNumber = matcher.matches();
-                                }
-                                if (response == null || isNumber) {
-                                    saveDataAndGoToLoginScreen(date);
-                                }
+                                validateResponse(response, date);
                                 if (randomScreenshot) {
                                     screenShotInterval = Math.random() * initialScreenshotInterval;
                                 }
@@ -297,23 +267,11 @@ public class HomeController {
                                 parametersPost.add(new BasicNameValuePair("date", lastScreenShotTime.getTime() + ""));
 
                                 String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/save_screenshot", parametersPost, Utils.JSESSIONID);
-                                Pattern number = Pattern.compile("\\d+");
-                                boolean isNumber = false;
-                                if (response != null) {
-                                    Matcher matcher = number.matcher(response);
-                                    isNumber = matcher.matches();
-                                }
-                                if (response == null || isNumber) {
-                                    saveDataAndGoToLoginScreen(date);
-                                }
+                                validateResponse(response, date);
                                 System.out.println(Utils.IDENTICAL_SCREENSHOTS);
                             }
 
-                        } catch (AWTException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (URISyntaxException e) {
+                        } catch (AWTException | IOException | URISyntaxException e) {
                             e.printStackTrace();
                         }
                     }
@@ -322,6 +280,18 @@ public class HomeController {
             lastUpdate = now;
         }
     };
+
+    private void validateResponse(String response, Date endDate) {
+        Pattern number = Pattern.compile("\\d+");
+        boolean isNumber = false;
+        if (response != null) {
+            Matcher matcher = number.matcher(response);
+            isNumber = matcher.matches();
+        }
+        if (response == null || isNumber) {
+            saveDataAndGoToLoginScreen(endDate);
+        }
+    }
 
     @FXML
     void onClickBtnNext(ActionEvent event) throws IOException, URISyntaxException {
@@ -395,7 +365,7 @@ public class HomeController {
     }
 
     @FXML
-    void onClickLogOut(ActionEvent event) throws IOException, ClassNotFoundException {
+    void onClickLogOut(ActionEvent event) throws IOException {
         if (systemTray != null && trayIcon != null) {
             systemTray.remove(trayIcon);
         }
@@ -410,12 +380,7 @@ public class HomeController {
         stage.setScene(scene);
         stage.setResizable(false);
 
-        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent t) {
-                Platform.exit();
-            }
-        });
+        stage.setOnCloseRequest(t -> Platform.exit());
         stage.show();
     }
 
@@ -452,7 +417,6 @@ public class HomeController {
         } else {
             labelNoUsers.setVisible(false);
             foundUsersList.setVisible(true);
-            HomeController thisController = this;
             for (PrimitiveUser primitiveUser : primitiveUsers) {
                 JFXToolbar toolbar = new JFXToolbar();
 
@@ -476,17 +440,13 @@ public class HomeController {
 
                 toolbar.setStyle(".jfx-tool-bar-list-item");
 
-                toolbar.setOnMouseClicked(new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        chatPane.setVisible(true);
-                        chatUsernameLabel.setText(labelCenter.getText());
-                    }
+                toolbar.setOnMouseClicked(event -> {
+                    chatPane.setVisible(true);
+                    chatUsernameLabel.setText(labelCenter.getText());
                 });
                 foundUsersList.getItems().add(toolbar);
             }
         }
-
     }
 
     @FXML
@@ -516,7 +476,6 @@ public class HomeController {
     }
 
     public String getBase64ScreenShot() throws AWTException {
-
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] screens = ge.getScreenDevices();
 
@@ -529,7 +488,6 @@ public class HomeController {
 
         Robot robot = new Robot();
         BufferedImage screenShot = robot.createScreenCapture(allScreenBounds);
-        BufferedImage screenShot2 = robot.createScreenCapture(allScreenBounds);
         BufferedImage resizedScreenshot = Utils.resizeImage(screenShot, 170, 300);
         Image image = SwingFXUtils.toFXImage(resizedScreenshot, null);
 
@@ -549,7 +507,6 @@ public class HomeController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        ;
 
         if (screenShotHashCode == 0 || screenShotHashCode != imageString.hashCode()) {
             screenShotHashCode = imageString.hashCode();
@@ -560,16 +517,14 @@ public class HomeController {
         }
     }
 
-    public Date getWorkedDate(Date startDate) {
-
+    private Date getWorkedDate(Date startDate) {
         Instant instant = Instant.ofEpochMilli(startDate.getTime());
         LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
         localDateTime = localDateTime.plusSeconds(workedTime.getSecond());
         localDateTime = localDateTime.plusMinutes(workedTime.getMinute());
         localDateTime = localDateTime.plusHours(workedTime.getHour());
         instant = localDateTime.atZone(ZoneId.systemDefault()).toInstant();
-        Date endDate = Date.from(instant);
-        return endDate;
+        return Date.from(instant);
     }
 
     public Label getLabelUsername() {
@@ -644,7 +599,6 @@ public class HomeController {
                 }
 
             } else {
-
                 System.out.println("There are no data to send!");
             }
         }
@@ -672,7 +626,6 @@ public class HomeController {
         NotSentData notSentData = new NotSentData(timerId, endDate.getTime());
         String notSentDataJson = gson.toJson(notSentData);
         pref.put("notSentData", notSentDataJson);
-
         goToLoginScreenWithError(Utils.INTERNET_ERROR_IN_WORKING);
     }
 
@@ -694,67 +647,32 @@ public class HomeController {
             stage.setResizable(false);
             stage.show();
             LoginController controller = loader.getController();
-            controller.showErrorDialog(TimerConstants.ERROR.CONNECTION, error);
+            controller.showErrorDialog(TimerConstants.EMPTY_STRING, error);
 
-            scene.getWindow().setOnCloseRequest(new EventHandler<WindowEvent>() {
-                public void handle(WindowEvent ev) {
-                    System.exit(0);
-                }
-            });
+            scene.getWindow().setOnCloseRequest(ev -> System.exit(0));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void showFinishWorkDialog(String taskname, LocalTime workedTime) {
+    public void showFinishWorkDialog(String taskName, LocalTime workedTime) {
         String time = "";
-        if (workedTime.getHour() > 0)
+        if (workedTime.getHour() > 0) {
             time += workedTime.getHour() + "h ";
-        if (workedTime.getMinute() > 0)
+        }
+        if (workedTime.getMinute() > 0) {
             time += workedTime.getMinute() + "m ";
+        }
         time += workedTime.getSecond() + "s";
-        Label labelTaskName = new Label();
-        labelTaskName.setMaxWidth(240);
-        labelTaskName.setText(taskname);
-        JFXDialogLayout content = new JFXDialogLayout();
-        content.setHeading(labelTaskName);
-        content.setBody(new Text("You've worked on the task for\n" + time + "."));
-        JFXDialog dialog = new JFXDialog(stackPane, content, JFXDialog.DialogTransition.CENTER);
-        JFXButton button = new JFXButton("Okay");
-        button.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                dialog.close();
-            }
-        });
-        content.setActions(button);
-        dialog.setOverlayClose(false);
-        dialog.show();
-
+        String message = "You've worked on the task for\n" + time + ".";
+        ErrorDialogFactory.createErrorDialog(taskName, message, stackPane).show();
     }
 
     public void showTaskUpdateDialog() {
-        Label labelTaskName = new Label();
-        labelTaskName.setMaxWidth(240);
-        labelTaskName.setText("Task Update");
-        JFXDialogLayout content = new JFXDialogLayout();
-        content.setHeading(labelTaskName);
-        content.setBody(new Text("Your tasks was updated!"));//Your tasks have been updated!
-        JFXDialog dialog = new JFXDialog(stackPane, content, JFXDialog.DialogTransition.CENTER);
-        JFXButton button = new JFXButton("Okay");
-        button.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                dialog.close();
-            }
-        });
-        content.setActions(button);
-        dialog.setOverlayClose(false);
-        dialog.show();
-
+        ErrorDialogFactory.createErrorDialog("Task Update", "Your tasks was updated!", stackPane).show();
     }
 
-    public void stopApp() {
+    void stopApp() {
         if (at != null) {
             at.stop();
         }
