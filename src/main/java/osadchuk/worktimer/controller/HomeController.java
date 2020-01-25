@@ -41,6 +41,7 @@ import osadchuk.worktimer.entity.Task;
 import osadchuk.worktimer.entity.Timer;
 import osadchuk.worktimer.model.NotSentData;
 import osadchuk.worktimer.model.TreeViewHelper;
+import osadchuk.worktimer.util.TimerConstants;
 import osadchuk.worktimer.webRequest.HTTPRequest;
 import sun.misc.BASE64Encoder;
 
@@ -404,7 +405,7 @@ public class HomeController {
         LoginController controller = loader.getController();
 
         controller.checkRememberedUser();
-        Scene scene = new Scene(root, 325, 450);
+        Scene scene = new Scene(root, TimerConstants.APP.WIDTH, TimerConstants.APP.HEIGHT);
 
         stage.setScene(scene);
         stage.setResizable(false);
@@ -688,12 +689,12 @@ public class HomeController {
         //Parent root = null;
         try {
             Parent root = loader.load();
-            Scene scene = new Scene(root, 325, 450);
+            Scene scene = new Scene(root, TimerConstants.APP.WIDTH, TimerConstants.APP.HEIGHT);
             stage.setScene(scene);
             stage.setResizable(false);
             stage.show();
             LoginController controller = loader.getController();
-            controller.showConnectionErrorDialog(error);
+            controller.showErrorDialog(TimerConstants.ERROR.CONNECTION, error);
 
             scene.getWindow().setOnCloseRequest(new EventHandler<WindowEvent>() {
                 public void handle(WindowEvent ev) {

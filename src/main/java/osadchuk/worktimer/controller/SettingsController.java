@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import osadchuk.worktimer.Utils;
+import osadchuk.worktimer.util.TimerConstants;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -42,7 +43,7 @@ public class SettingsController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Scene scene = new Scene(root, 325, 450);
+        Scene scene = new Scene(root, TimerConstants.APP.WIDTH, TimerConstants.APP.HEIGHT);
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();

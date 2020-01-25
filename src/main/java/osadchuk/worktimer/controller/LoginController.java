@@ -2,8 +2,6 @@ package osadchuk.worktimer.controller;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXCheckBox;
-import com.jfoenix.controls.JFXDialog;
-import com.jfoenix.controls.JFXDialogLayout;
 import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXSpinner;
 import com.jfoenix.controls.JFXTextField;
@@ -11,26 +9,24 @@ import com.sun.javafx.application.HostServicesDelegate;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import osadchuk.worktimer.Utils;
 import osadchuk.worktimer.entity.SimpleTask;
+import osadchuk.worktimer.util.ErrorDialogFactory;
+import osadchuk.worktimer.util.TimerConstants;
 import osadchuk.worktimer.webRequest.HTTPRequest;
 import sun.misc.BASE64Encoder;
 
@@ -48,6 +44,9 @@ import java.util.List;
 import java.util.prefs.Preferences;
 
 public class LoginController {
+
+    private static final String CONNECTION_ERROR_MESSAGE = "Could not connect to\nthe server. Please, check\nyour Internet connection.";
+    private static final String AUTHENTICATION_ERROR_MESSAGE = "Invalid username or\npassword.";
 
     @FXML
     private AnchorPane anchorPane;
@@ -74,7 +73,6 @@ public class LoginController {
     private LoginThread loginThread = null;
     private Boolean isAuthorized = null;
 
-
     private AnimationTimer at = new AnimationTimer() {
         long lastUpdate = 0;
 
@@ -88,11 +86,8 @@ public class LoginController {
                         paneMain.setVisible(true);
                         paneMain.setDisable(false);
                         paneWait.setVisible(false);
-
-                        showConnectionErrorDialog("Could not connect to\nthe server. Please, check\nyour Internet connection.");
-
-                    } else if (isAuthorized == false) {
-
+                        showErrorDialog(TimerConstants.ERROR.CONNECTION, CONNECTION_ERROR_MESSAGE);
+                    } else if (!isAuthorized) {
                         loginThread.interrupt();
                         paneMain.setVisible(true);
                         paneMain.setDisable(false);
@@ -102,43 +97,25 @@ public class LoginController {
                         loginTextField.setStyle("-jfx-focus-color: red; -jfx-unfocus-color: red");
                         passwordTextField.setStyle("-jfx-focus-color: red; -jfx-unfocus-color: red");
                         rememberMeCheckBox.setSelected(false);
-
-                        JFXDialogLayout content = new JFXDialogLayout();
-                        content.setHeading(new Label("Authentication Error!"));
-                        content.setBody(new Text("Invalid username or\npassword."));
-                        JFXDialog dialog = new JFXDialog(stackPane, content, JFXDialog.DialogTransition.CENTER);
-                        JFXButton button = new JFXButton("Okay");
-                        button.setOnAction(new EventHandler<ActionEvent>() {
-                            @Override
-                            public void handle(ActionEvent event) {
-                                dialog.close();
-                            }
-                        });
-                        content.setActions(button);
-                        dialog.setOverlayClose(false);
-                        dialog.show();
+                        showErrorDialog(TimerConstants.ERROR.AUTHENTICATION, AUTHENTICATION_ERROR_MESSAGE);
                     } else {
-
                         loginThread.interrupt();
                         Stage stage = (Stage) btnSignIn.getScene().getWindow();
-
                         FXMLLoader loader = new FXMLLoader(getClass().getResource("/public/fxml/home.fxml"));
                         //Parent root = null;
                         try {
                             Parent root = loader.load();
-                            Scene scene = new Scene(root, 325, 450);
+                            Scene scene = new Scene(root, TimerConstants.APP.WIDTH, TimerConstants.APP.HEIGHT);
                             stage.setScene(scene);
                             stage.setResizable(false);
                             stage.setIconified(false);
                             stage.show();
                             HomeController controller = loader.getController();
                             createTrayIcon(stage, controller);
-
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-
                 }
             }
             lastUpdate = now;
@@ -146,40 +123,24 @@ public class LoginController {
     };
 
     @FXML
-    void initialize() throws IOException, ClassNotFoundException {
+    void initialize() {
         setHostServices(Utils.hostServices);
         checkRememberedUser();
     }
 
-    public void showConnectionErrorDialog(String message) {
-
-        JFXDialogLayout content = new JFXDialogLayout();
-        content.setHeading(new Label("Connection Error!"));
-        content.setBody(new Text(message));
-        JFXDialog dialog = new JFXDialog(stackPane, content, JFXDialog.DialogTransition.CENTER);
-        JFXButton button = new JFXButton("Okay");
-        button.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                dialog.close();
-            }
-        });
-        content.setActions(button);
-        dialog.setOverlayClose(false);
-        dialog.show();
+    public void showErrorDialog(String header, String body) {
+        ErrorDialogFactory.createErrorDialog(header, body, stackPane).show();
     }
 
     @FXML
     void onClickBtnSettings(ActionEvent event) {
         Stage stage = (Stage) btnSignIn.getScene().getWindow();
-
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/public/fxml/settings.fxml"));
         //FXMLLoader loader = new FXMLLoader(Utils.urlSettings);
 
-        // Parent root = null;
         try {
             Parent root = loader.load();
-            Scene scene = new Scene(root, 325, 450);
+            Scene scene = new Scene(root, TimerConstants.APP.WIDTH, TimerConstants.APP.HEIGHT);
             stage.setScene(scene);
             stage.setResizable(false);
             stage.show();
@@ -199,17 +160,16 @@ public class LoginController {
     }
 
     @FXML
-    void onClickBtnSignIn(ActionEvent event) throws IOException, URISyntaxException {
+    void onClickBtnSignIn(ActionEvent event) {
         Preferences pref;
         pref = Preferences.userNodeForPackage(LoginController.class);
         Utils.authToken = new UsernamePasswordAuthenticationToken(loginTextField.getText(), passwordTextField.getText());
         if (rememberMeCheckBox.isSelected()) {
-            pref.put("username", loginTextField.getText());
-            pref.put("password", passwordTextField.getText());
+            pref.put(TimerConstants.USERNAME, loginTextField.getText());
+            pref.put(TimerConstants.PASSWORD, passwordTextField.getText());
         } else {
-
-            pref.put("username", "");
-            pref.put("password", "");
+            pref.put(TimerConstants.USERNAME, TimerConstants.EMPTY_STRING);
+            pref.put(TimerConstants.PASSWORD, TimerConstants.EMPTY_STRING);
         }
         paneMain.setDisable(true);
         paneWait.setVisible(true);
@@ -220,7 +180,6 @@ public class LoginController {
         if (loginThread != null) {
             loginThread = new LoginThread();
         } else {
-            loginThread = null;
             loginThread = new LoginThread();
         }
         loginThread.start();
@@ -236,27 +195,23 @@ public class LoginController {
 
     @FXML
     void OnMouseClickPassword(MouseEvent event) {
-        loginTextField.setStyle("");
-        passwordTextField.setStyle("");
+        loginTextField.setStyle(TimerConstants.EMPTY_STRING);
+        passwordTextField.setStyle(TimerConstants.EMPTY_STRING);
     }
 
-    public void checkRememberedUser() throws IOException, ClassNotFoundException {
-
-
+    void checkRememberedUser() {
         Preferences pref;
         pref = Preferences.userNodeForPackage(LoginController.class);
-        String username = pref.get("username", "");
-        String password = pref.get("password", "");
+        String username = pref.get(TimerConstants.USERNAME, TimerConstants.EMPTY_STRING);
+        String password = pref.get(TimerConstants.PASSWORD, TimerConstants.EMPTY_STRING);
         if (username != null && password != null && !username.isEmpty() && !password.isEmpty()) {
             loginTextField.setText(username);
             passwordTextField.setText(password);
             rememberMeCheckBox.setSelected(true);
         }
-        //This give you the value of the preference
     }
 
     private void login(Authentication authToken) throws IOException {
-
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = new ObjectOutputStream(bos);
         out.writeObject(authToken);
@@ -273,7 +228,6 @@ public class LoginController {
     }
 
     private class LoginThread extends Thread {
-
         public void run() {
             String response = null;
             try {
@@ -281,7 +235,7 @@ public class LoginController {
                 System.out.println(Utils.JSESSIONID);
 
                 List<NameValuePair> parameters = new ArrayList<>();
-                parameters.add(new BasicNameValuePair("username", loginTextField.getText()));
+                parameters.add(new BasicNameValuePair(TimerConstants.USERNAME, loginTextField.getText()));
                 response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "api/simple_tasks/by_username", parameters, Utils.JSESSIONID);
                 System.out.println(response);
 
@@ -299,50 +253,17 @@ public class LoginController {
                     }
                     Utils.username = loginTextField.getText();
                     isAuthorized = true;
-
-                    return;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
                 isAuthorized = null;
-                return;
             } catch (URISyntaxException e) {
                 e.printStackTrace();
-                return;
             }
         }
     }
 
-    private void setUserIcon(String base64userIcon) {
-        Utils.userIcon = Utils.getImageFromBase64(base64userIcon, 40, 40);
-    }
-
-    public HostServicesDelegate getHostServices() {
-        return hostServices;
-    }
-
-    public void setHostServices(HostServicesDelegate hostServices) {
-        this.hostServices = hostServices;
-    }
-
-    public JFXPasswordField getPasswordTextField() {
-        return passwordTextField;
-    }
-
-    public void setPasswordTextField(JFXPasswordField passwordTextField) {
-        this.passwordTextField = passwordTextField;
-    }
-
-    public JFXTextField getLoginTextField() {
-        return loginTextField;
-    }
-
-    public void setLoginTextField(JFXTextField loginTextField) {
-        this.loginTextField = loginTextField;
-    }
-
-
-    public void createTrayIcon(final Stage stage, HomeController controller) {
+    private void createTrayIcon(final Stage stage, HomeController controller) {
         if (SystemTray.isSupported()) {
             // get the SystemTray instance
             SystemTray tray = SystemTray.getSystemTray();
@@ -354,53 +275,31 @@ public class LoginController {
                 System.out.println(ex);
             }
 
-
-            stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-                @Override
-                public void handle(WindowEvent t) {
-                    if (controller.isWorkStarted()) {
-                        hide(stage);
-                    } else {
-                        controller.stopApp();
-                    }
+            stage.setOnCloseRequest(t -> {
+                if (controller.isWorkStarted()) {
+                    hide(stage);
+                } else {
+                    controller.stopApp();
                 }
             });
 
-
-            // create a action listener to listen for default action executed on the tray icon
-            final ActionListener closeListener = new ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    if (!controller.isWorkStarted()) {
-                        controller.stopApp();
-                    }
+            // create an action listener to listen for default action executed on the tray icon
+            final ActionListener closeListener = e -> {
+                if (!controller.isWorkStarted()) {
+                    controller.stopApp();
                 }
             };
 
-            ActionListener showListener = new ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            stage.show();
-                        }
-                    });
-                }
-            };
+            ActionListener showListener = e -> Platform.runLater(stage::show);
 
             MouseListener mouseListener = new MouseListener() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            if (stage.isShowing() && controller.isWorkStarted()) {
-                                hide(stage);
-                            } else {
-                                stage.show();
-                            }
+                    Platform.runLater(() -> {
+                        if (stage.isShowing() && controller.isWorkStarted()) {
+                            hide(stage);
+                        } else {
+                            stage.show();
                         }
                     });
                 }
@@ -435,7 +334,7 @@ public class LoginController {
             MenuItem closeItem = new MenuItem("Close");
             closeItem.addActionListener(closeListener);
             popup.add(closeItem);
-            trayIcon = new TrayIcon(image, "VallTimer", popup);
+            trayIcon = new TrayIcon(image, TimerConstants.APP.NAME, popup);
             trayIcon.addActionListener(showListener);
             trayIcon.addMouseListener(mouseListener);
             trayIcon.setImageAutoSize(true);
@@ -443,12 +342,12 @@ public class LoginController {
                 tray.add(trayIcon);
                 controller.setTray(tray, trayIcon);
             } catch (AWTException e) {
-                System.err.println(e);
+                System.out.println(e);
             }
         }
     }
 
-    public void showProgramIsMinimizedMsg() {
+    private void showProgramIsMinimizedMsg() {
         if (firstTime) {
             trayIcon.displayMessage("Some message.",
                     "Some other message.",
@@ -458,17 +357,42 @@ public class LoginController {
     }
 
     private void hide(final Stage stage) {
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                if (SystemTray.isSupported()) {
-                    stage.hide();
-                    //showProgramIsMinimizedMsg();
-                } /*else {
-                    Platform.exit();
-                }*/
-            }
+        Platform.runLater(() -> {
+            if (SystemTray.isSupported()) {
+                stage.hide();
+                //showProgramIsMinimizedMsg();
+            } /*else {
+                Platform.exit();
+            }*/
         });
+    }
+
+    private void setUserIcon(String base64userIcon) {
+        Utils.userIcon = Utils.getImageFromBase64(base64userIcon, 40, 40);
+    }
+
+    private HostServicesDelegate getHostServices() {
+        return hostServices;
+    }
+
+    private void setHostServices(HostServicesDelegate hostServices) {
+        this.hostServices = hostServices;
+    }
+
+    public JFXPasswordField getPasswordTextField() {
+        return passwordTextField;
+    }
+
+    public void setPasswordTextField(JFXPasswordField passwordTextField) {
+        this.passwordTextField = passwordTextField;
+    }
+
+    public JFXTextField getLoginTextField() {
+        return loginTextField;
+    }
+
+    public void setLoginTextField(JFXTextField loginTextField) {
+        this.loginTextField = loginTextField;
     }
 }
 
