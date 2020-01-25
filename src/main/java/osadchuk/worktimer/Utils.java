@@ -9,11 +9,11 @@ import org.apache.http.message.BasicNameValuePair;
 import org.springframework.security.core.Authentication;
 import osadchuk.worktimer.controller.HomeController;
 import osadchuk.worktimer.controller.SettingsController;
+import osadchuk.worktimer.entity.PrimitiveUser;
 import osadchuk.worktimer.entity.SimpleTask;
 import osadchuk.worktimer.entity.Timer;
 import osadchuk.worktimer.webRequest.HTTPRequest;
 import sun.misc.BASE64Decoder;
-import osadchuk.worktimer.entity.PrimitiveUser;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -43,21 +43,21 @@ public class Utils {
 
     public static final String INTERNET_ERROR_IN_WORKING =
             "Could not connect to\n" +
-            "the server. Please, check\n" +
-            "your Internet connection.\n" +
-            "The data about your work\n"+
-            "will be sent the next time.";
+                    "the server. Please, check\n" +
+                    "your Internet connection.\n" +
+                    "The data about your work\n" +
+                    "will be sent the next time.";
 
     public static final String INTERNET_ERROR =
             "Could not connect to\n" +
-            "the server. Please, check\n" +
-            "your Internet connection.";
+                    "the server. Please, check\n" +
+                    "your Internet connection.";
 
-    public static final String CHEATING_ERROR  = "Don't cheat!";
+    public static final String CHEATING_ERROR = "Don't cheat!";
 
-    public static final String IDENTICAL_SCREENSHOTS  =
+    public static final String IDENTICAL_SCREENSHOTS =
             "Identical screenshots were\n" +
-            "detected!";
+                    "detected!";
 
     public static String serverIpAddress;
 
@@ -65,23 +65,23 @@ public class Utils {
         setServerInfo();
     }
 
-    public static void setServerInfo(){
+    public static void setServerInfo() {
 
-        String ip="", port="", name="", protocol="http";
+        String ip = "", port = "", name = "", protocol = "http";
         Preferences pref;
         pref = Preferences.userNodeForPackage(SettingsController.class);
-        ip = pref.get("ip","");
-        port = pref.get("port","");
-        name = pref.get("name","");
-        protocol = pref.get("protocol","");
-        boolean ipIsNull=false, portIsNull=false, nameIsNull=false, protocolIsNull=false;
+        ip = pref.get("ip", "");
+        port = pref.get("port", "");
+        name = pref.get("name", "");
+        protocol = pref.get("protocol", "");
+        boolean ipIsNull = false, portIsNull = false, nameIsNull = false, protocolIsNull = false;
 
-        if (ip==null || ip.isEmpty()) ipIsNull=true;
-        if (port==null || port.isEmpty()) portIsNull=true;
-        if (name==null|| name.isEmpty()) portIsNull=true;
-        if (protocol==null|| protocol.isEmpty()) protocolIsNull=true;
+        if (ip == null || ip.isEmpty()) ipIsNull = true;
+        if (port == null || port.isEmpty()) portIsNull = true;
+        if (name == null || name.isEmpty()) portIsNull = true;
+        if (protocol == null || protocol.isEmpty()) protocolIsNull = true;
 
-        if (ipIsNull || portIsNull || nameIsNull || protocolIsNull){
+        if (ipIsNull || portIsNull || nameIsNull || protocolIsNull) {
             try {
                 Properties settings = new Properties();
                 settings.load(Utils.class.getResourceAsStream("/public/config/settings.conf"));
@@ -96,29 +96,31 @@ public class Utils {
             }
         }
 
-        serverIpAddress = protocol+"://"+ip;
-        if (port!=null && !port.equals("80")){
-            serverIpAddress += ":"+port;
+        serverIpAddress = protocol + "://" + ip;
+        if (port != null && !port.equals("80")) {
+            serverIpAddress += ":" + port;
         }
         serverIpAddress += "/";
-        if (!name.equalsIgnoreCase("none")){
-            serverIpAddress+=name+"/";
-        }
+//        if (!name.equalsIgnoreCase("none")){
+//            serverIpAddress+=name+"/";
+//        }
     }
 
-    public static Timer getTimerFromJson(String jsonString){
+    public static Timer getTimerFromJson(String jsonString) {
         Gson gson = new Gson();
-        return gson.fromJson(jsonString,Timer.class);
+        return gson.fromJson(jsonString, Timer.class);
     }
 
     public static List<SimpleTask> getListOfSimpleTasksFromJson(String value) {
-        Type listType = new TypeToken<List<SimpleTask>>() {}.getType();
+        Type listType = new TypeToken<List<SimpleTask>>() {
+        }.getType();
         return new Gson().fromJson(value, listType);
     }
 
-    public static List<PrimitiveUser> getListOfPrimitiveUsersFromJson(String value){
-        Type listType = new TypeToken<List<PrimitiveUser>>() {}.getType();
-        return new Gson().fromJson(value,listType);
+    public static List<PrimitiveUser> getListOfPrimitiveUsersFromJson(String value) {
+        Type listType = new TypeToken<List<PrimitiveUser>>() {
+        }.getType();
+        return new Gson().fromJson(value, listType);
     }
 
     public static BufferedImage resizeImage(BufferedImage img, int height, int width) {
@@ -130,19 +132,19 @@ public class Utils {
         return resized;
     }
 
-    public static String authenticationToJson(Authentication authentication){
+    public static String authenticationToJson(Authentication authentication) {
         Gson gson = new Gson();
         return gson.toJson(authentication);
     }
 
-    public static Authentication authenticationFromJson(String authentication){
+    public static Authentication authenticationFromJson(String authentication) {
         Gson gson = new Gson();
-        return gson.fromJson(authentication,Authentication.class);
+        return gson.fromJson(authentication, Authentication.class);
     }
 
-    public static javafx.scene.image.Image getImageFromBase64(String base64Image, Integer height, Integer width){
+    public static javafx.scene.image.Image getImageFromBase64(String base64Image, Integer height, Integer width) {
         int startIndex = base64Image.indexOf(',');
-        base64Image=base64Image.substring(startIndex+1);
+        base64Image = base64Image.substring(startIndex + 1);
         BufferedImage bufferedImage = null;
         byte[] imageByte;
         try {
@@ -154,28 +156,28 @@ public class Utils {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (height!=null && width!=null){
-            bufferedImage = Utils.resizeImage(bufferedImage,30,30 );
+        javafx.scene.image.Image image = null;
+        if (height != null && width != null && bufferedImage != null) {
+            bufferedImage = Utils.resizeImage(bufferedImage, 30, 30);
+            image = SwingFXUtils.toFXImage(bufferedImage, null);
         }
-        javafx.scene.image.Image image = SwingFXUtils.toFXImage(bufferedImage,null);
         return image;
     }
 
     public static void updateSimpleTaskList(boolean showUpdateDialog) throws IOException, URISyntaxException {
         List<NameValuePair> parameters = new ArrayList<>();
         parameters.add(new BasicNameValuePair("username", Utils.username));
-        String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress+"api/simple_tasks/by_username",parameters,Utils.JSESSIONID);
+        String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "api/simple_tasks/by_username", parameters, Utils.JSESSIONID);
         List<SimpleTask> list = Utils.getListOfSimpleTasksFromJson(response);
 
-        if (list!=null && !list.isEmpty() && !list.equals(Utils.simpleTaskList)){
-            Utils.simpleTaskList=list;
+        if (list != null && !list.isEmpty() && !list.equals(Utils.simpleTaskList)) {
+            Utils.simpleTaskList = list;
             homeController.showTaskTreeView();
-        }
-        else {
-            Utils.simpleTaskList=null;
+        } else {
+            Utils.simpleTaskList = null;
         }
 
-        if (showUpdateDialog){
+        if (showUpdateDialog) {
             homeController.showTaskUpdateDialog();
         }
 

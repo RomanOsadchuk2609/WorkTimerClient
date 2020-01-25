@@ -33,7 +33,7 @@ public class Project {
 
     @Override
     public String toString() {
-        return  projectName ;
+        return projectName;
     }
 
     @Override

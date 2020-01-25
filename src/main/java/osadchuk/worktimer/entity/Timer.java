@@ -1,7 +1,5 @@
 package osadchuk.worktimer.entity;
 
-import java.util.Date;
-
 public class Timer {
     private long id;
     private long starttime;

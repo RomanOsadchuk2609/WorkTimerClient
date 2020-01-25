@@ -1,23 +1,24 @@
 package osadchuk.worktimer.model;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import javafx.scene.control.TreeItem;
 import osadchuk.worktimer.Utils;
 import osadchuk.worktimer.entity.Project;
 import osadchuk.worktimer.entity.SimpleTask;
 import osadchuk.worktimer.entity.Task;
 
-public class TreeViewHelper{
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class TreeViewHelper {
 
     public TreeViewHelper() {
 
     }
-        // This method creates an ArrayList of TreeItems (Products)
-    public ArrayList<TreeItem> getTasks(){
+
+    // This method creates an ArrayList of TreeItems (Products)
+    public ArrayList<TreeItem> getTasks() {
         ArrayList<TreeItem> products = new ArrayList<TreeItem>();
         /*TreeItem cars = new TreeItem("Cars");
         cars.getChildren().addAll(getCars());
@@ -35,17 +36,17 @@ public class TreeViewHelper{
     }
 
 
-    private ArrayList<TreeItem> getProjects(List<SimpleTask> list){
+    private ArrayList<TreeItem> getProjects(List<SimpleTask> list) {
         if (list != null) {
 
             ArrayList<TreeItem> projects = new ArrayList<TreeItem>();
             Set<Project> projectsSet = new HashSet<>();
-            for (SimpleTask simpleTask:list){
-                projectsSet.add(new Project(simpleTask.getProjectId(),simpleTask.getProjectName()));
+            for (SimpleTask simpleTask : list) {
+                projectsSet.add(new Project(simpleTask.getProjectId(), simpleTask.getProjectName()));
             }
-            for (Project p:projectsSet){
+            for (Project p : projectsSet) {
                 TreeItem item = new TreeItem(p);
-                item.getChildren().addAll(this.getTasksByProject(list,p.getId()));
+                item.getChildren().addAll(this.getTasksByProject(list, p.getId()));
                 projects.add(item);
             }
             return projects;
@@ -53,15 +54,15 @@ public class TreeViewHelper{
         return null;
     }
 
-    private ArrayList<TreeItem> getTasksByProject(List<SimpleTask> list, long projectId){
+    private ArrayList<TreeItem> getTasksByProject(List<SimpleTask> list, long projectId) {
         ArrayList<TreeItem> tasks = new ArrayList<TreeItem>();
 
-        for (SimpleTask simpleTask:list){
-            if (simpleTask.getProjectId()==projectId && simpleTask.getParentTaskId()==0){
-                Task task = new Task(simpleTask.getTaskId(),simpleTask.getTaskName(),simpleTask.getPerformerId());
+        for (SimpleTask simpleTask : list) {
+            if (simpleTask.getProjectId() == projectId && simpleTask.getParentTaskId() == 0) {
+                Task task = new Task(simpleTask.getTaskId(), simpleTask.getTaskName(), simpleTask.getPerformerId());
                 TreeItem treeItem = new TreeItem(task);
-                if (simpleTask.isHasSubtask()){
-                    treeItem.getChildren().addAll(this.getSubtasksByTask(list,simpleTask.getTaskId()));
+                if (simpleTask.isHasSubtask()) {
+                    treeItem.getChildren().addAll(this.getSubtasksByTask(list, simpleTask.getTaskId()));
                 }
                 tasks.add(treeItem);
             }
@@ -70,16 +71,16 @@ public class TreeViewHelper{
         return tasks;
     }
 
-    private ArrayList<TreeItem> getSubtasksByTask(List<SimpleTask> list, long taskId){
+    private ArrayList<TreeItem> getSubtasksByTask(List<SimpleTask> list, long taskId) {
         ArrayList<TreeItem> tasks = new ArrayList<TreeItem>();
 
 
-        for (SimpleTask simpleTask:list){
-            if (simpleTask.getParentTaskId()==taskId){
-                Task task = new Task(simpleTask.getTaskId(),simpleTask.getTaskName(),simpleTask.getPerformerId());
+        for (SimpleTask simpleTask : list) {
+            if (simpleTask.getParentTaskId() == taskId) {
+                Task task = new Task(simpleTask.getTaskId(), simpleTask.getTaskName(), simpleTask.getPerformerId());
                 TreeItem treeItem = new TreeItem(task);
-                if (simpleTask.isHasSubtask()){
-                    treeItem.getChildren().addAll(getSubtasksByTask(list,simpleTask.getTaskId()));
+                if (simpleTask.isHasSubtask()) {
+                    treeItem.getChildren().addAll(getSubtasksByTask(list, simpleTask.getTaskId()));
                 }
                 tasks.add(treeItem);
             }

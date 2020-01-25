@@ -1,6 +1,12 @@
 package osadchuk.worktimer.controller;
 
-import com.jfoenix.controls.*;
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXCheckBox;
+import com.jfoenix.controls.JFXDialog;
+import com.jfoenix.controls.JFXDialogLayout;
+import com.jfoenix.controls.JFXPasswordField;
+import com.jfoenix.controls.JFXSpinner;
+import com.jfoenix.controls.JFXTextField;
 import com.sun.javafx.application.HostServicesDelegate;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
@@ -10,7 +16,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -23,19 +29,21 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import osadchuk.worktimer.Utils;
 import osadchuk.worktimer.entity.SimpleTask;
 import osadchuk.worktimer.webRequest.HTTPRequest;
 import sun.misc.BASE64Encoder;
-import osadchuk.worktimer.Utils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.MenuItem;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -62,17 +70,18 @@ public class LoginController {
 
     private boolean firstTime;
     private TrayIcon trayIcon;
-    private  HostServicesDelegate hostServices;
-    private LoginThread loginThread=null;
-    private Boolean isAuthorized=null;
+    private HostServicesDelegate hostServices;
+    private LoginThread loginThread = null;
+    private Boolean isAuthorized = null;
 
 
     private AnimationTimer at = new AnimationTimer() {
         long lastUpdate = 0;
+
         @Override
         public void handle(long now) {
-            if (now - lastUpdate >1_000_000){
-                if (!loginThread.isAlive()){
+            if (now - lastUpdate > 1_000_000) {
+                if (!loginThread.isAlive()) {
                     at.stop();
                     if (isAuthorized == null) {
                         loginThread.interrupt();
@@ -82,8 +91,7 @@ public class LoginController {
 
                         showConnectionErrorDialog("Could not connect to\nthe server. Please, check\nyour Internet connection.");
 
-                    }
-                    else if(isAuthorized == false) {
+                    } else if (isAuthorized == false) {
 
                         loginThread.interrupt();
                         paneMain.setVisible(true);
@@ -109,8 +117,7 @@ public class LoginController {
                         content.setActions(button);
                         dialog.setOverlayClose(false);
                         dialog.show();
-                    }
-                    else {
+                    } else {
 
                         loginThread.interrupt();
                         Stage stage = (Stage) btnSignIn.getScene().getWindow();
@@ -125,7 +132,7 @@ public class LoginController {
                             stage.setIconified(false);
                             stage.show();
                             HomeController controller = loader.getController();
-                            createTrayIcon(stage,controller);
+                            createTrayIcon(stage, controller);
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -137,13 +144,14 @@ public class LoginController {
             lastUpdate = now;
         }
     };
+
     @FXML
     void initialize() throws IOException, ClassNotFoundException {
         setHostServices(Utils.hostServices);
         checkRememberedUser();
     }
 
-    public void showConnectionErrorDialog(String message){
+    public void showConnectionErrorDialog(String message) {
 
         JFXDialogLayout content = new JFXDialogLayout();
         content.setHeading(new Label("Connection Error!"));
@@ -168,7 +176,7 @@ public class LoginController {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/public/fxml/settings.fxml"));
         //FXMLLoader loader = new FXMLLoader(Utils.urlSettings);
 
-       // Parent root = null;
+        // Parent root = null;
         try {
             Parent root = loader.load();
             Scene scene = new Scene(root, 325, 450);
@@ -182,27 +190,26 @@ public class LoginController {
 
     @FXML
     void onClickForgotPassword(ActionEvent event) {
-        getHostServices().showDocument(Utils.serverIpAddress+"forgot");
+        getHostServices().showDocument(Utils.serverIpAddress + "forgot");
     }
 
     @FXML
     void OnClickBtnSignUp(ActionEvent event) {
-        getHostServices().showDocument(Utils.serverIpAddress+"registration");
+        getHostServices().showDocument(Utils.serverIpAddress + "registration");
     }
 
     @FXML
     void onClickBtnSignIn(ActionEvent event) throws IOException, URISyntaxException {
         Preferences pref;
         pref = Preferences.userNodeForPackage(LoginController.class);
-        Utils.authToken= new UsernamePasswordAuthenticationToken(loginTextField.getText(),passwordTextField.getText());
-        if (rememberMeCheckBox.isSelected()){
-            pref.put("username",loginTextField.getText());
-            pref.put("password",passwordTextField.getText());
-        }
-        else{
+        Utils.authToken = new UsernamePasswordAuthenticationToken(loginTextField.getText(), passwordTextField.getText());
+        if (rememberMeCheckBox.isSelected()) {
+            pref.put("username", loginTextField.getText());
+            pref.put("password", passwordTextField.getText());
+        } else {
 
-            pref.put("username","");
-            pref.put("password","");
+            pref.put("username", "");
+            pref.put("password", "");
         }
         paneMain.setDisable(true);
         paneWait.setVisible(true);
@@ -212,8 +219,7 @@ public class LoginController {
         paneWait.getChildren().add(waitSpinner);
         if (loginThread != null) {
             loginThread = new LoginThread();
-        }
-        else {
+        } else {
             loginThread = null;
             loginThread = new LoginThread();
         }
@@ -221,7 +227,6 @@ public class LoginController {
         at.start();
 
     }
-
 
 
     @FXML
@@ -240,9 +245,9 @@ public class LoginController {
 
         Preferences pref;
         pref = Preferences.userNodeForPackage(LoginController.class);
-        String username = pref.get("username","");
-        String password = pref.get("password","");
-        if (username!=null && password!=null && !username.isEmpty() && !password.isEmpty()){
+        String username = pref.get("username", "");
+        String password = pref.get("password", "");
+        if (username != null && password != null && !username.isEmpty() && !password.isEmpty()) {
             loginTextField.setText(username);
             passwordTextField.setText(password);
             rememberMeCheckBox.setSelected(true);
@@ -263,11 +268,11 @@ public class LoginController {
 
         List<NameValuePair> parametersPost2 = new ArrayList<>();
         parametersPost2.add(new BasicNameValuePair("authToken", authTokenBase64));
-        String loginResponse  = HTTPRequest.login(Utils.serverIpAddress+"timer/login",parametersPost2);
+        String loginResponse = HTTPRequest.login(Utils.serverIpAddress + "timer/login", parametersPost2);
         System.out.println(loginResponse);
     }
 
-    private class LoginThread extends Thread{
+    private class LoginThread extends Thread {
 
         public void run() {
             String response = null;
@@ -277,31 +282,29 @@ public class LoginController {
 
                 List<NameValuePair> parameters = new ArrayList<>();
                 parameters.add(new BasicNameValuePair("username", loginTextField.getText()));
-                response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress+"api/simple_tasks/by_username",parameters,Utils.JSESSIONID);
+                response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "api/simple_tasks/by_username", parameters, Utils.JSESSIONID);
                 System.out.println(response);
 
-                if (response.equals("302") ||response.equals("401")){
+                if (response.equals("302") || response.equals("401")) {
                     isAuthorized = false;
                     return;
-                }
-                else {
-                    String base64userIcon = HTTPRequest.getResponseFromGet(Utils.serverIpAddress+"timer/get_user_icon",Utils.JSESSIONID);
+                } else {
+                    String base64userIcon = HTTPRequest.getResponseFromGet(Utils.serverIpAddress + "timer/get_user_icon", Utils.JSESSIONID);
                     setUserIcon(base64userIcon);
                     List<SimpleTask> list = Utils.getListOfSimpleTasksFromJson(response);
-                    if (!list.isEmpty()){
-                        Utils.simpleTaskList=list;
-                    }
-                    else {
-                        Utils.simpleTaskList=null;
+                    if (!list.isEmpty()) {
+                        Utils.simpleTaskList = list;
+                    } else {
+                        Utils.simpleTaskList = null;
                     }
                     Utils.username = loginTextField.getText();
-                    isAuthorized=true;
+                    isAuthorized = true;
 
                     return;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                isAuthorized =null;
+                isAuthorized = null;
                 return;
             } catch (URISyntaxException e) {
                 e.printStackTrace();
@@ -310,8 +313,8 @@ public class LoginController {
         }
     }
 
-    private void setUserIcon(String base64userIcon){
-        Utils.userIcon = Utils.getImageFromBase64(base64userIcon,40,40);
+    private void setUserIcon(String base64userIcon) {
+        Utils.userIcon = Utils.getImageFromBase64(base64userIcon, 40, 40);
     }
 
     public HostServicesDelegate getHostServices() {
@@ -355,10 +358,9 @@ public class LoginController {
             stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent t) {
-                    if (controller.isWorkStarted()){
+                    if (controller.isWorkStarted()) {
                         hide(stage);
-                    }
-                    else {
+                    } else {
                         controller.stopApp();
                     }
                 }
@@ -394,10 +396,9 @@ public class LoginController {
                         @Override
                         public void run() {
 
-                            if (stage.isShowing() && controller.isWorkStarted()){
+                            if (stage.isShowing() && controller.isWorkStarted()) {
                                 hide(stage);
-                            }
-                            else {
+                            } else {
                                 stage.show();
                             }
                         }
@@ -440,7 +441,7 @@ public class LoginController {
             trayIcon.setImageAutoSize(true);
             try {
                 tray.add(trayIcon);
-                controller.setTray(tray,trayIcon);
+                controller.setTray(tray, trayIcon);
             } catch (AWTException e) {
                 System.err.println(e);
             }

@@ -2,7 +2,7 @@ package osadchuk.worktimer.model;
 
 import java.io.Serializable;
 
-public class UserInfo implements Serializable{
+public class UserInfo implements Serializable {
     private String username;
     private String pasword;
 

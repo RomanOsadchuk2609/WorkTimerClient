@@ -25,7 +25,7 @@ public class SettingsController {
     private String primaryName;
 
     @FXML
-    void initialize(){
+    void initialize() {
         System.out.println(Utils.serverIpAddress);
         loadSettings();
     }
@@ -48,20 +48,20 @@ public class SettingsController {
         stage.show();
     }
 
-    private void loadSettings(){
-        String ip="", port="", name="";
+    private void loadSettings() {
+        String ip = "", port = "", name = "";
         Preferences pref;
         pref = Preferences.userNodeForPackage(SettingsController.class);
-        ip = pref.get("ip","");
-        port = pref.get("port","");
-        name = pref.get("name","");
-        boolean ipIsNull=false, portIsNull=false, nameIsNull=false;
+        ip = pref.get("ip", "");
+        port = pref.get("port", "");
+        name = pref.get("name", "");
+        boolean ipIsNull = false, portIsNull = false, nameIsNull = false;
 
-        if (ip==null || ip.isEmpty()) ipIsNull=true;
-        if (port==null || port.isEmpty()) portIsNull=true;
-        if (name==null || name.isEmpty()) portIsNull=true;
+        if (ip == null || ip.isEmpty()) ipIsNull = true;
+        if (port == null || port.isEmpty()) portIsNull = true;
+        if (name == null || name.isEmpty()) portIsNull = true;
 
-        if (ipIsNull || portIsNull || nameIsNull){
+        if (ipIsNull || portIsNull || nameIsNull) {
             try {
                 Properties settings = new Properties();
                 /*File file = new File(getClass().getResource("/public/config/settings.conf").toURI());
@@ -79,13 +79,12 @@ public class SettingsController {
 
         serverIpTF.setPromptText(ip);
         serverPortTF.setPromptText(port);
-        if (name.equals("None")){
+        if (name.equals("None")) {
             serverNameTF.setPromptText("None");
-            primaryName="";
-        }
-        else {
+            primaryName = "";
+        } else {
             serverNameTF.setPromptText(name);
-            primaryName=name;
+            primaryName = name;
         }
 
     }
@@ -99,23 +98,23 @@ public class SettingsController {
 
         Preferences pref;
         pref = Preferences.userNodeForPackage(SettingsController.class);
-        String name = pref.get("name","");
+        String name = pref.get("name", "");
 
-        if (newIp!=null && !newIp.isEmpty()){
+        if (newIp != null && !newIp.isEmpty()) {
             saveIP(newIp);
         }
-        if (newPort!=null && !newPort.isEmpty()){
+        if (newPort != null && !newPort.isEmpty()) {
             savePort(newPort);
         }
-        if (newName!=null /*&& !primaryName.equals(newName)*/ && !newName.isEmpty()){
+        if (newName != null /*&& !primaryName.equals(newName)*/ && !newName.isEmpty()) {
             saveName(newName.trim());
         }
     }
 
-    private void saveIP(String newIp){
+    private void saveIP(String newIp) {
         Preferences pref;
         pref = Preferences.userNodeForPackage(SettingsController.class);
-        pref.put("ip",newIp);
+        pref.put("ip", newIp);
         serverIpTF.clear();
         serverIpTF.setPromptText(newIp);
         Utils.setServerInfo();
@@ -123,29 +122,28 @@ public class SettingsController {
 
     }
 
-    private void savePort(String newPort){
+    private void savePort(String newPort) {
         Preferences pref;
         pref = Preferences.userNodeForPackage(SettingsController.class);
-        pref.put("port",newPort);
+        pref.put("port", newPort);
         serverPortTF.clear();
         serverPortTF.setPromptText(newPort);
         Utils.setServerInfo();
         System.out.println(Utils.serverIpAddress);
     }
 
-    private void saveName(String newName){
+    private void saveName(String newName) {
         Preferences pref;
         pref = Preferences.userNodeForPackage(SettingsController.class);
         serverNameTF.clear();
-        if (newName.isEmpty()){
+        if (newName.isEmpty()) {
             serverNameTF.setPromptText("None");
-            pref.put("name","None");
-            primaryName="";
-        }
-        else {
-            pref.put("name",newName);
+            pref.put("name", "None");
+            primaryName = "";
+        } else {
+            pref.put("name", newName);
             serverNameTF.setPromptText(newName);
-            primaryName=newName;
+            primaryName = newName;
         }
         Utils.setServerInfo();
         System.out.println(Utils.serverIpAddress);
