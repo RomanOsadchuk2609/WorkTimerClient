@@ -8,146 +8,87 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import osadchuk.worktimer.Utils;
 import osadchuk.worktimer.util.TimerConstants;
 
 import java.io.IOException;
-import java.util.Properties;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
+@Slf4j
 public class SettingsController {
+    private static final String SERVER_IP_ADDRESS_LOG_MESSAGE = "Server IP address: {}";
 
     @FXML
     private JFXButton btnBack, buttonSaveChanges;
 
     @FXML
-    private JFXTextField serverIpTF, serverPortTF, serverNameTF;
+    private JFXTextField serverIpTF;
 
-    private String primaryName;
+    @FXML
+    private JFXTextField serverPortTF;
+
+    @FXML
+    private JFXTextField serverProtocolTF;
+
+    private Map<TimerConstants.PROPERTY, String> propertyMap = new EnumMap<>(TimerConstants.PROPERTY.class);
 
     @FXML
     void initialize() {
-        System.out.println(Utils.serverIpAddress);
-        loadSettings();
+        log.debug(SERVER_IP_ADDRESS_LOG_MESSAGE, Utils.serverIpAddress);
+        propertyMap = Utils.loadPropertymap();
+        showProperties();
     }
 
     @FXML
     void onClickBtnBack(ActionEvent event) {
-
         Stage stage = (Stage) btnBack.getScene().getWindow();
-
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/public/fxml/login.fxml"));
-        Parent root = null;
+        Parent root;
         try {
             root = loader.load();
+            Scene scene = new Scene(root, TimerConstants.APP.WIDTH, TimerConstants.APP.HEIGHT);
+            stage.setScene(scene);
+            stage.setResizable(false);
+            stage.show();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to load parent screen", e);
         }
-        Scene scene = new Scene(root, TimerConstants.APP.WIDTH, TimerConstants.APP.HEIGHT);
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.show();
     }
 
-    private void loadSettings() {
-        String ip = "", port = "", name = "";
-        Preferences pref;
-        pref = Preferences.userNodeForPackage(SettingsController.class);
-        ip = pref.get("ip", "");
-        port = pref.get("port", "");
-        name = pref.get("name", "");
-        boolean ipIsNull = false, portIsNull = false, nameIsNull = false;
-
-        if (ip == null || ip.isEmpty()) ipIsNull = true;
-        if (port == null || port.isEmpty()) portIsNull = true;
-        if (name == null || name.isEmpty()) portIsNull = true;
-
-        if (ipIsNull || portIsNull || nameIsNull) {
-            try {
-                Properties settings = new Properties();
-                /*File file = new File(getClass().getResource("/public/config/settings.conf").toURI());
-                settings.load(new FileInputStream(file));*/
-                settings.load(getClass().getResourceAsStream("/public/config/settings.conf"));
-
-                if (ipIsNull) ip = settings.getProperty("ip");
-                if (portIsNull) port = settings.getProperty("port");
-                if (nameIsNull) name = settings.getProperty("name");
-
-            } catch (IOException /* | URISyntaxException*/ e) {
-                e.printStackTrace();
-            }
-        }
-
-        serverIpTF.setPromptText(ip);
-        serverPortTF.setPromptText(port);
-        if (name.equals("None")) {
-            serverNameTF.setPromptText("None");
-            primaryName = "";
-        } else {
-            serverNameTF.setPromptText(name);
-            primaryName = name;
-        }
-
+    private void showProperties() {
+        serverProtocolTF.clear();
+        serverProtocolTF.setPromptText(propertyMap.get(TimerConstants.PROPERTY.PROTOCOL));
+        serverIpTF.clear();
+        serverIpTF.setPromptText(propertyMap.get(TimerConstants.PROPERTY.IP_ADDRESS));
+        serverPortTF.clear();
+        serverPortTF.setPromptText(propertyMap.get(TimerConstants.PROPERTY.PORT));
     }
 
     @FXML
     void onClickButtonSave(ActionEvent event) {
+        String newProtocol = serverProtocolTF.getText();
         String newIp = serverIpTF.getText();
         String newPort = serverPortTF.getText();
-        String newName = serverNameTF.getText();
-
-
-        Preferences pref;
-        pref = Preferences.userNodeForPackage(SettingsController.class);
-        String name = pref.get("name", "");
-
+        if (newProtocol != null && !newProtocol.isEmpty()) {
+            saveProperty(TimerConstants.PROPERTY.PROTOCOL, newProtocol);
+        }
         if (newIp != null && !newIp.isEmpty()) {
-            saveIP(newIp);
+            saveProperty(TimerConstants.PROPERTY.IP_ADDRESS, newIp);
         }
         if (newPort != null && !newPort.isEmpty()) {
-            savePort(newPort);
+            saveProperty(TimerConstants.PROPERTY.PORT, newPort);
         }
-        if (newName != null /*&& !primaryName.equals(newName)*/ && !newName.isEmpty()) {
-            saveName(newName.trim());
-        }
+        log.debug(SERVER_IP_ADDRESS_LOG_MESSAGE, Utils.serverIpAddress);
     }
 
-    private void saveIP(String newIp) {
-        Preferences pref;
-        pref = Preferences.userNodeForPackage(SettingsController.class);
-        pref.put("ip", newIp);
-        serverIpTF.clear();
-        serverIpTF.setPromptText(newIp);
-        Utils.setServerInfo();
-        System.out.println(Utils.serverIpAddress);
-
+    private void saveProperty(TimerConstants.PROPERTY property, String value) {
+        Preferences pref = Preferences.userNodeForPackage(SettingsController.class);
+        pref.put(property.getName(), value);
+        propertyMap.put(property, value);
+        showProperties();
+        Utils.setServerInfo(propertyMap);
     }
-
-    private void savePort(String newPort) {
-        Preferences pref;
-        pref = Preferences.userNodeForPackage(SettingsController.class);
-        pref.put("port", newPort);
-        serverPortTF.clear();
-        serverPortTF.setPromptText(newPort);
-        Utils.setServerInfo();
-        System.out.println(Utils.serverIpAddress);
-    }
-
-    private void saveName(String newName) {
-        Preferences pref;
-        pref = Preferences.userNodeForPackage(SettingsController.class);
-        serverNameTF.clear();
-        if (newName.isEmpty()) {
-            serverNameTF.setPromptText("None");
-            pref.put("name", "None");
-            primaryName = "";
-        } else {
-            pref.put("name", newName);
-            serverNameTF.setPromptText(newName);
-            primaryName = newName;
-        }
-        Utils.setServerInfo();
-        System.out.println(Utils.serverIpAddress);
-    }
-
 }

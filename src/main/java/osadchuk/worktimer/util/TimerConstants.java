@@ -18,6 +18,23 @@ public class TimerConstants {
         public static final String AUTHENTICATION = "Authentication Error";
     }
 
+    public enum PROPERTY {
+
+        PROTOCOL("protocol"),
+        IP_ADDRESS("ip"),
+        PORT("port");
+
+        private String name;
+
+        PROPERTY(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
     public static final String EMPTY_STRING = "";
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";

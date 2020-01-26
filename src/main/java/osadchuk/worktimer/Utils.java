@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sun.javafx.application.HostServicesDelegate;
 import javafx.embed.swing.SwingFXUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.security.core.Authentication;
@@ -12,6 +13,7 @@ import osadchuk.worktimer.controller.SettingsController;
 import osadchuk.worktimer.entity.PrimitiveUser;
 import osadchuk.worktimer.entity.SimpleTask;
 import osadchuk.worktimer.entity.Timer;
+import osadchuk.worktimer.util.TimerConstants;
 import osadchuk.worktimer.webRequest.HTTPRequest;
 import sun.misc.BASE64Decoder;
 
@@ -22,13 +24,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 
-
+@Slf4j
 public class Utils {
 
     public static List<SimpleTask> simpleTaskList;
@@ -36,10 +39,8 @@ public class Utils {
     public static Authentication authToken;
     public static javafx.scene.image.Image userIcon;
     public static String username;
-    public static boolean isWorkStarted;
     public static HostServicesDelegate hostServices;
     public static HomeController homeController;
-    public static URL urlSettings;
 
     public static final String INTERNET_ERROR_IN_WORKING =
             "Could not connect to\n" +
@@ -62,48 +63,55 @@ public class Utils {
     public static String serverIpAddress;
 
     static {
-        setServerInfo();
+        Map<TimerConstants.PROPERTY, String> propertyMap = loadPropertymap();
+        setServerInfo(propertyMap);
     }
 
-    public static void setServerInfo() {
-
-        String ip = "", port = "", name = "", protocol = "http";
-        Preferences pref;
-        pref = Preferences.userNodeForPackage(SettingsController.class);
-        ip = pref.get("ip", "");
-        port = pref.get("port", "");
-        name = pref.get("name", "");
-        protocol = pref.get("protocol", "");
-        boolean ipIsNull = false, portIsNull = false, nameIsNull = false, protocolIsNull = false;
+    public static Map<TimerConstants.PROPERTY, String> loadPropertymap() {
+        Map<TimerConstants.PROPERTY, String> propertyMap = new EnumMap<>(TimerConstants.PROPERTY.class);
+        Preferences pref = Preferences.userNodeForPackage(SettingsController.class);
+        String protocol = pref.get(TimerConstants.PROPERTY.PROTOCOL.getName(), TimerConstants.EMPTY_STRING);
+        String ip = pref.get(TimerConstants.PROPERTY.IP_ADDRESS.getName(), TimerConstants.EMPTY_STRING);
+        String port = pref.get(TimerConstants.PROPERTY.PORT.getName(), TimerConstants.EMPTY_STRING);
+        boolean protocolIsNull = false;
+        boolean ipIsNull = false;
+        boolean portIsNull = false;
 
         if (ip == null || ip.isEmpty()) ipIsNull = true;
         if (port == null || port.isEmpty()) portIsNull = true;
-        if (name == null || name.isEmpty()) portIsNull = true;
         if (protocol == null || protocol.isEmpty()) protocolIsNull = true;
 
-        if (ipIsNull || portIsNull || nameIsNull || protocolIsNull) {
+        if (ipIsNull || portIsNull || protocolIsNull) {
             try {
                 Properties settings = new Properties();
                 settings.load(Utils.class.getResourceAsStream("/public/config/settings.conf"));
 
-                if (ipIsNull) ip = settings.getProperty("ip");
-                if (portIsNull) port = settings.getProperty("port");
-                if (nameIsNull) name = settings.getProperty("name");
-                if (protocolIsNull) protocol = settings.getProperty("protocol");
+                if (protocolIsNull) protocol = settings.getProperty(TimerConstants.PROPERTY.PROTOCOL.getName());
+                if (ipIsNull) ip = settings.getProperty(TimerConstants.PROPERTY.IP_ADDRESS.getName());
+                if (portIsNull) port = settings.getProperty(TimerConstants.PROPERTY.PORT.getName());
 
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Error: ", e);
             }
         }
+        propertyMap.putIfAbsent(TimerConstants.PROPERTY.PROTOCOL, protocol);
+        propertyMap.putIfAbsent(TimerConstants.PROPERTY.IP_ADDRESS, ip);
+        propertyMap.putIfAbsent(TimerConstants.PROPERTY.PORT, port);
+        return propertyMap;
+    }
 
-        serverIpAddress = protocol + "://" + ip;
+    public static void setServerInfo(Map<TimerConstants.PROPERTY, String> propertyMap) {
+        StringBuilder serverAddressBuilder = new StringBuilder();
+        serverAddressBuilder.append(propertyMap.get(TimerConstants.PROPERTY.PROTOCOL));
+        serverAddressBuilder.append("://");
+        serverAddressBuilder.append(propertyMap.get(TimerConstants.PROPERTY.IP_ADDRESS));
+        String port = propertyMap.get(TimerConstants.PROPERTY.PORT);
         if (port != null && !port.equals("80")) {
-            serverIpAddress += ":" + port;
+            serverAddressBuilder.append(":");
+            serverAddressBuilder.append(port);
         }
-        serverIpAddress += "/";
-//        if (!name.equalsIgnoreCase("none")){
-//            serverIpAddress+=name+"/";
-//        }
+        serverAddressBuilder.append("/");
+        serverIpAddress = serverAddressBuilder.toString();
     }
 
     public static Timer getTimerFromJson(String jsonString) {
@@ -154,7 +162,7 @@ public class Utils {
             bufferedImage = ImageIO.read(bis);
             bis.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error: ", e);
         }
         javafx.scene.image.Image image = null;
         if (height != null && width != null && bufferedImage != null) {
@@ -180,8 +188,5 @@ public class Utils {
         if (showUpdateDialog) {
             homeController.showTaskUpdateDialog();
         }
-
     }
-
-
 }

@@ -19,6 +19,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
+@Slf4j
 public class LoginController {
 
     private static final String CONNECTION_ERROR_MESSAGE = "Could not connect to\nthe server. Please, check\nyour Internet connection.";
@@ -113,7 +115,7 @@ public class LoginController {
                             HomeController controller = loader.getController();
                             createTrayIcon(stage, controller);
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            log.error("Error: ", e);
                         }
                     }
                 }
@@ -145,7 +147,7 @@ public class LoginController {
             stage.setResizable(false);
             stage.show();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error: ", e);
         }
     }
 
@@ -177,11 +179,11 @@ public class LoginController {
         waitSpinner.setLayoutX(10);
         waitSpinner.setLayoutY(10);
         paneWait.getChildren().add(waitSpinner);
-        if (loginThread != null) {
+        /*if (loginThread != null) {
             loginThread = new LoginThread();
         } else {
-            loginThread = new LoginThread();
-        }
+        }*/
+        loginThread = new LoginThread();
         loginThread.start();
         at.start();
 
@@ -224,7 +226,7 @@ public class LoginController {
         List<NameValuePair> parametersPost2 = new ArrayList<>();
         parametersPost2.add(new BasicNameValuePair("authToken", authTokenBase64));
         String loginResponse = HTTPRequest.login(Utils.serverIpAddress + "timer/login", parametersPost2);
-        System.out.println(loginResponse);
+        log.debug("Login response: {}", loginResponse);
     }
 
     private class LoginThread extends Thread {
@@ -232,12 +234,11 @@ public class LoginController {
             String response = null;
             try {
                 login(Utils.authToken);
-                System.out.println(Utils.JSESSIONID);
-
+                log.debug("JSESSIONID = {}", Utils.JSESSIONID);
                 List<NameValuePair> parameters = new ArrayList<>();
                 parameters.add(new BasicNameValuePair(TimerConstants.USERNAME, loginTextField.getText()));
                 response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "api/simple_tasks/by_username", parameters, Utils.JSESSIONID);
-                System.out.println(response);
+                log.debug("api/simple_tasks/by_username response: {}", response);
 
                 if (response.equals("302") || response.equals("401")) {
                     isAuthorized = false;
@@ -255,10 +256,10 @@ public class LoginController {
                     isAuthorized = true;
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Error: ", e);
                 isAuthorized = null;
             } catch (URISyntaxException e) {
-                e.printStackTrace();
+                log.error("Error: ", e);
             }
         }
     }
@@ -272,7 +273,7 @@ public class LoginController {
             try {
                 image = ImageIO.read(getClass().getResource("/public/img/icon.png"));
             } catch (IOException ex) {
-                System.out.println(ex);
+                log.error("Error: ", ex);
             }
 
             stage.setOnCloseRequest(t -> {
@@ -342,7 +343,7 @@ public class LoginController {
                 tray.add(trayIcon);
                 controller.setTray(tray, trayIcon);
             } catch (AWTException e) {
-                System.out.println(e);
+                log.error("Error: ", e);
             }
         }
     }
