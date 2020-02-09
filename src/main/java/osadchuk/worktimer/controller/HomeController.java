@@ -33,7 +33,7 @@ import org.apache.http.message.BasicNameValuePair;
 import osadchuk.worktimer.Utils;
 import osadchuk.worktimer.entity.PrimitiveUser;
 import osadchuk.worktimer.entity.Task;
-import osadchuk.worktimer.entity.Timer;
+import osadchuk.worktimer.entity.TimeLogDTO;
 import osadchuk.worktimer.model.NotSentData;
 import osadchuk.worktimer.model.TreeViewHelper;
 import osadchuk.worktimer.util.ErrorDialogFactory;
@@ -109,7 +109,6 @@ public class HomeController {
 
 	@FXML
 	void initialize() throws IOException {
-		//Platform.setImplicitExit(false);
 		new SendNotSentDataThread().start();
 
 		isCheating = false;
@@ -121,9 +120,9 @@ public class HomeController {
             /*File file = new File(getClass().getResource("/public/config/settings.conf").toURI());
             settings.load(new FileInputStream(file));*/
 		settings.load(getClass().getResourceAsStream("/public/config/settings.conf"));
-		sendScreenShot = Boolean.valueOf(settings.getProperty("isScreenshotsSending"));
-		randomScreenshot = Boolean.valueOf(settings.getProperty("randomScreenshot"));
-		initialScreenshotInterval = Long.valueOf(settings.getProperty("screenShotInterval"));
+		sendScreenShot = Boolean.parseBoolean(settings.getProperty("isScreenshotsSending"));
+		randomScreenshot = Boolean.parseBoolean(settings.getProperty("randomScreenshot"));
+		initialScreenshotInterval = Long.parseLong(settings.getProperty("screenShotInterval"));
 		screenShotInterval = initialScreenshotInterval;
 		System.out.println("screenShotInterval = " + screenShotInterval);
 
@@ -134,7 +133,7 @@ public class HomeController {
 		Utils.homeController = this;
 		lastTaskUpdate = new Date();
 		lastUtilsIsWorkStartedValue = false;
-		Image image = new Image("/public/img/icon_warning.png");
+//		Image image = new Image("/public/img/icon_warning.png");
 		userImage.setImage(Utils.userIcon);
 		Circle circle = new Circle(20);
 		circle.setCenterX(20);
@@ -173,14 +172,13 @@ public class HomeController {
 					try {
 						Utils.updateSimpleTaskList(false);
 					} catch (IOException | URISyntaxException e) {
-						e.printStackTrace();
+						log.error("Could not update tasks. ", e);
 					}
-					//showTaskTreeView();
 				}
 				if (!isWorkStarted) {
 					labelWorkStarted.setVisible(false);
 					logOutLink.setDisable(false);
-					if (!btnNext.getText().equals("Refresh")) {
+					if (!btnNext.getText().equals(TimerConstants.REFRESH)) {
 						btnNext.setText("Start work");
 						logOutLink.setDisable(false);
 						vbox.setVisible(true);
@@ -208,10 +206,10 @@ public class HomeController {
 					currentTime = currentTime.minusHours(startTime.getHour());
 					workedTime = currentTime;
 					DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
-					SimpleDateFormat formater = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+					SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 					labelTime.setText(currentTime.format(timeFormat));
 					if (startDate != null) {
-						labelStartTime.setText(formater.format(startDate));
+						labelStartTime.setText(formatter.format(startDate));
 					}
 					String screenShotBase64 = null;
 
@@ -224,20 +222,19 @@ public class HomeController {
 						//Sending POST request about finishing work
 						lastStopRequestTime = screenTime;
 						Date endDate = getWorkedDate(startDate);
-						//new StopWorkThread(timerId,endDate.getTime()).start();
 						List<NameValuePair> parametersPost = new ArrayList<>();
-						System.out.println(startDate + " = " + startDate.getTime());
-						System.out.println(endDate + " = " + endDate.getTime());
-						parametersPost.add(new BasicNameValuePair("timer_id", timerId + ""));
-						parametersPost.add(new BasicNameValuePair("endtime", endDate.getTime() + ""));
+						log.debug("{} = {}", startDate, startDate.getTime());
+						log.debug("{} = {}", endDate, endDate.getTime());
+						parametersPost.add(new BasicNameValuePair("time_log_id", String.valueOf(timerId)));
+						parametersPost.add(new BasicNameValuePair("end_time", String.valueOf(endDate.getTime())));
 
 						String response = null;
 						try {
-							response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/stop", parametersPost, Utils.JSESSIONID);
+							response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_STOP, parametersPost, Utils.JSESSIONID);
+							log.debug("time_log/stop Response: {}", response);
 						} catch (IOException | URISyntaxException e) {
-							e.printStackTrace();
+							log.error("Could not stop time log. ", e);
 						}
-						//String response = "";
 						validateResponse(response, endDate);
 					}
 
@@ -270,11 +267,10 @@ public class HomeController {
 
 								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/save_screenshot", parametersPost, Utils.JSESSIONID);
 								validateResponse(response, date);
-								System.out.println(Utils.IDENTICAL_SCREENSHOTS);
+								log.debug(Utils.IDENTICAL_SCREENSHOTS);
 							}
-
 						} catch (AWTException | IOException | URISyntaxException e) {
-							e.printStackTrace();
+							log.error("Error: ", e);
 						}
 					}
 				}
@@ -297,7 +293,7 @@ public class HomeController {
 
 	@FXML
 	void onClickBtnNext(ActionEvent event) throws IOException, URISyntaxException {
-		if (btnNext.getText().equals("Refresh")) {
+		if (btnNext.getText().equals(TimerConstants.REFRESH)) {
 			refresh();
 		} else {
 			if (!isWorkStarted) {
@@ -308,15 +304,15 @@ public class HomeController {
 				labelTaskName.setText(selectedTask.getTaskName());
 				lastScreenShotTime = new Date();
 				lastStopRequestTime = new Date();
-				//new StartWorkThread(selectedTask.getPerformerId(),startDate.getTime()).start();
 				List<NameValuePair> parametersGet = new ArrayList<>();
-				parametersGet.add(new BasicNameValuePair("performer_id", selectedTask.getPerformerId() + ""));
-				parametersGet.add(new BasicNameValuePair("starttime", startDate.getTime() + ""));
-				System.out.println(selectedTask.getPerformerId());
-				System.out.println(startTime);
+				parametersGet.add(new BasicNameValuePair("user_id", "1"));
+				parametersGet.add(new BasicNameValuePair("task_id", "1"));
+				parametersGet.add(new BasicNameValuePair("start_time", String.valueOf(startDate.getTime())));
+				log.debug("PerformerId: {}", selectedTask.getPerformerId());
+				log.debug("StartTime: {}", startTime);
 				String response = null;
 				try {
-					response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/create", parametersGet, Utils.JSESSIONID);
+					response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_START, parametersGet, Utils.JSESSIONID);
 					Pattern number = Pattern.compile("\\d+");
 					boolean isNumber = false;
 					if (response != null) {
@@ -338,12 +334,13 @@ public class HomeController {
 				Date endDate = this.getWorkedDate(startDate);
 				//new StopWorkThread(timerId,endDate.getTime()).start();
 				List<NameValuePair> parametersPost = new ArrayList<>();
-				System.out.println(startDate + " = " + startDate.getTime());
-				System.out.println(endDate + " = " + endDate.getTime());
-				parametersPost.add(new BasicNameValuePair("timer_id", timerId + ""));
-				parametersPost.add(new BasicNameValuePair("endtime", endDate.getTime() + ""));
+				log.debug("{} = {}", startDate, startDate.getTime());
+				log.debug("{} = {}", endDate, endDate.getTime());
+				parametersPost.add(new BasicNameValuePair("time_log_id", String.valueOf(timerId)));
+				parametersPost.add(new BasicNameValuePair("end_time", String.valueOf(endDate.getTime())));
 
-				String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/stop", parametersPost, Utils.JSESSIONID);
+				String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_STOP, parametersPost, Utils.JSESSIONID);
+				log.debug("time_log/stop Response: {}", response);
 				Pattern number = Pattern.compile("\\d+");
 				boolean isNumber = false;
 				if (response != null) {
@@ -357,7 +354,6 @@ public class HomeController {
 					logOutLink.setDisable(false);
 					isWorkStarted = false;
 					showFinishWorkDialog(selectedTask.getTaskName(), workedTime);
-
 				}
 			}
 		}
@@ -469,7 +465,7 @@ public class HomeController {
 		} else {
 			vbox.setVisible(false);
 			labelNoTasks.setVisible(true);
-			btnNext.setText("Refresh");
+			btnNext.setText(TimerConstants.REFRESH);
 			btnNext.setDisable(false);
 		}
 	}
@@ -504,7 +500,7 @@ public class HomeController {
 			imageString = encoder.encode(imageBytes);
 			bos.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("Error: ", e);
 		}
 
 		if (screenShotHashCode == 0 || screenShotHashCode != imageString.hashCode()) {
@@ -550,15 +546,14 @@ public class HomeController {
 		isWorkStarted = workStarted;
 	}
 
-	public void startWork(String timerResponse) {
+	public void startWork(String timeLogResponse) {
 		isWorkStarted = true;
 		logOutLink.setDisable(true);
 		timerPane.setVisible(true);
-
-		Timer timer = Utils.getTimerFromJson(timerResponse);
+		TimeLogDTO timeLogDTO = Utils.getTimeLogFromJson(timeLogResponse);
 		lastScreenShotTime = new Date();
 		lastStopRequestTime = new Date();
-		timerId = timer.getId();
+		timerId = timeLogDTO.getId();
 		isStarted = true;
 	}
 
@@ -570,17 +565,16 @@ public class HomeController {
 
 			Preferences pref = Preferences.userNodeForPackage(HomeController.class);
 			Gson gson = new Gson();
-			String notSentDataJson = pref.get("notSentData", "");
+			String notSentDataJson = pref.get(TimerConstants.NOT_SENT_DATA, TimerConstants.EMPTY_STRING);
 			if (notSentDataJson != null && !notSentDataJson.isEmpty()) {
 				NotSentData notSentData = gson.fromJson(notSentDataJson, NotSentData.class);
 
 				List<NameValuePair> parametersPost = new ArrayList<>();
-				parametersPost.add(new BasicNameValuePair("timer_id", notSentData.getTimerId() + ""));
-				parametersPost.add(new BasicNameValuePair("endtime", notSentData.getDate() + ""));
-
-				String response = null;
+				parametersPost.add(new BasicNameValuePair("time_log_id", String.valueOf(notSentData.getTimerId())));
+				parametersPost.add(new BasicNameValuePair("end_time", String.valueOf(notSentData.getDate())));
 				try {
-					response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/stop", parametersPost, Utils.JSESSIONID);
+					String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_STOP, parametersPost, Utils.JSESSIONID);
+					log.debug("time_log/stop Response: {}", response);
 					Pattern number = Pattern.compile("\\d+");
 					boolean isNumber = false;
 					if (response != null) {
@@ -591,14 +585,14 @@ public class HomeController {
 						goToLoginScreenWithError(Utils.INTERNET_ERROR_IN_WORKING);
 					} else {
 						pref.put("notSentData", "");
-						System.out.println("Data was sent successfully!");
+						log.info("Data was sent successfully!");
 					}
 				} catch (IOException | URISyntaxException e) {
-					e.printStackTrace();
+					log.error("Error during sending saved data: ", e);
 				}
 
 			} else {
-				System.out.println("There are no data to send!");
+				log.info("There are no data to send!");
 			}
 		}
 
@@ -615,7 +609,6 @@ public class HomeController {
         NotSentData notSentData = new NotSentData(timerId,lastScreenShotTime.getTime());
         String notSentDataJson = gson.toJson(notSentData);
         pref.put("notSentData",notSentDataJson);*/
-
 		goToLoginScreenWithError(Utils.CHEATING_ERROR);
 	}
 
@@ -638,7 +631,6 @@ public class HomeController {
 		Stage stage = (Stage) btnNext.getScene().getWindow();
 
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/public/fxml/login.fxml"));
-		//Parent root = null;
 		try {
 			Parent root = loader.load();
 			Scene scene = new Scene(root, TimerConstants.APP.WIDTH, TimerConstants.APP.HEIGHT);
@@ -650,7 +642,7 @@ public class HomeController {
 
 			scene.getWindow().setOnCloseRequest(ev -> System.exit(0));
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("Error: ", e);
 		}
 	}
 
@@ -676,7 +668,5 @@ public class HomeController {
 			at.stop();
 		}
 		System.exit(0);
-		//Platform.exit();
 	}
-
 }

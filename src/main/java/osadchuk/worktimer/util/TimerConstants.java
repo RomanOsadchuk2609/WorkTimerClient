@@ -3,6 +3,13 @@ package osadchuk.worktimer.util;
 public class TimerConstants {
     private TimerConstants(){}
 
+    public static final String EMPTY_STRING = "";
+    public static final String USERNAME = "username";
+    public static final String PASSWORD = "password";
+    public static final String OKAY = "Okay";
+    public static final String NOT_SENT_DATA = "notSentData";
+    public static final String REFRESH = "Refresh";
+
     public static final class APP {
         private APP(){}
 
@@ -35,9 +42,11 @@ public class TimerConstants {
         }
     }
 
-    public static final String EMPTY_STRING = "";
-    public static final String USERNAME = "username";
-    public static final String PASSWORD = "password";
-    public static final String OKAY = "Okay";
+    public static final class URL {
+        private URL(){}
+
+        public static final String TIME_LOG_START = "time_log/create";
+        public static final String TIME_LOG_STOP = "time_log/stop";
+    }
 
 }
