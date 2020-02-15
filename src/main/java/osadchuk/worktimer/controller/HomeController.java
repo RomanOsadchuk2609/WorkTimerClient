@@ -117,8 +117,6 @@ public class HomeController {
 		screenShotInterval = 5 * 60 * 1000;//5 minutes
 
 		Properties settings = new Properties();
-            /*File file = new File(getClass().getResource("/public/config/settings.conf").toURI());
-            settings.load(new FileInputStream(file));*/
 		settings.load(getClass().getResourceAsStream("/public/config/settings.conf"));
 		sendScreenShot = Boolean.parseBoolean(settings.getProperty("isScreenshotsSending"));
 		randomScreenshot = Boolean.parseBoolean(settings.getProperty("randomScreenshot"));
@@ -133,7 +131,6 @@ public class HomeController {
 		Utils.homeController = this;
 		lastTaskUpdate = new Date();
 		lastUtilsIsWorkStartedValue = false;
-//		Image image = new Image("/public/img/icon_warning.png");
 		userImage.setImage(Utils.userIcon);
 		Circle circle = new Circle(20);
 		circle.setCenterX(20);
@@ -218,7 +215,8 @@ public class HomeController {
 					if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 60 * 1.5) {
 						isCheating = true;
 						punishCheater();
-					} else if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 60) {
+//					} else if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 60) {
+					} else if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 15) {
 						//Sending POST request about finishing work
 						lastStopRequestTime = screenTime;
 						Date endDate = getWorkedDate(startDate);
@@ -243,34 +241,25 @@ public class HomeController {
 							String lastScreenShotBase64 = screenShotBase64;
 							screenShotBase64 = null;
 							screenShotBase64 = getBase64ScreenShot();
+							Date date = new Date();
+							List<NameValuePair> parametersPost = new ArrayList<>();
+							parametersPost.add(new BasicNameValuePair("time_log_id", String.valueOf(timerId)));
+							parametersPost.add(new BasicNameValuePair("screenshot", screenShotBase64 != null ? screenShotBase64 : lastScreenShotBase64));
+							parametersPost.add(new BasicNameValuePair("date", String.valueOf(date.getTime())));
 							if (screenShotBase64 != null) {
-								Date date = new Date();
-								List<NameValuePair> parametersPost = new ArrayList<>();
-								parametersPost.add(new BasicNameValuePair("timer_id", timerId + ""));
-								parametersPost.add(new BasicNameValuePair("screenshot", screenShotBase64));
-								parametersPost.add(new BasicNameValuePair("date", date.getTime() + ""));
-
-								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/save_screenshot", parametersPost, Utils.JSESSIONID);
-								Pattern number = Pattern.compile("\\d+");
-								boolean isNumber = false;
+								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "time_log/save_screenshot", parametersPost, Utils.JSESSIONID);
 								validateResponse(response, date);
 								if (randomScreenshot) {
 									screenShotInterval = Math.random() * initialScreenshotInterval;
 								}
 								lastScreenShotTime = screenTime;
 							} else {
-								Date date = new Date();
-								List<NameValuePair> parametersPost = new ArrayList<>();
-								parametersPost.add(new BasicNameValuePair("timer_id", timerId + ""));
-								parametersPost.add(new BasicNameValuePair("screenshot", lastScreenShotBase64));
-								parametersPost.add(new BasicNameValuePair("date", lastScreenShotTime.getTime() + ""));
-
-								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "timer/save_screenshot", parametersPost, Utils.JSESSIONID);
+								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "time_log/save_screenshot", parametersPost, Utils.JSESSIONID);
 								validateResponse(response, date);
 								log.debug(Utils.IDENTICAL_SCREENSHOTS);
 							}
 						} catch (AWTException | IOException | URISyntaxException e) {
-							log.error("Error: ", e);
+							log.error("Could not send screenshot: ", e);
 						}
 					}
 				}
@@ -305,10 +294,10 @@ public class HomeController {
 				lastScreenShotTime = new Date();
 				lastStopRequestTime = new Date();
 				List<NameValuePair> parametersGet = new ArrayList<>();
-				parametersGet.add(new BasicNameValuePair("user_id", "1"));
-				parametersGet.add(new BasicNameValuePair("task_id", "1"));
+				parametersGet.add(new BasicNameValuePair("user_id", String.valueOf(selectedTask.getUserId())));
+				parametersGet.add(new BasicNameValuePair("task_id", String.valueOf(selectedTask.getId())));
 				parametersGet.add(new BasicNameValuePair("start_time", String.valueOf(startDate.getTime())));
-				log.debug("PerformerId: {}", selectedTask.getPerformerId());
+				log.debug("PerformerId: {}", selectedTask.getUserId());
 				log.debug("StartTime: {}", startTime);
 				String response = null;
 				try {
@@ -325,7 +314,7 @@ public class HomeController {
 				} catch (IOException | URISyntaxException e) {
 					log.error("Error:", e);
 				}
-				log.debug("Response: {}", response);
+				log.debug("time_log/create Response: {}", response);
 				if (response != null) {
 					startWork(response);
 				}
@@ -451,13 +440,13 @@ public class HomeController {
 
 	public void showTaskTreeView() {
 
-		ArrayList<TreeItem> tasks = treeViewHelper.getTasks();
+		List<TreeItem<Task>> tasks = treeViewHelper.getTasks();
 
 		if (tasks != null) {
 			vbox.setVisible(true);
 			labelNoTasks.setVisible(false);
 			labelWorkStarted.setVisible(false);
-			TreeItem rootItem = new TreeItem("Projects");
+			TreeItem rootItem = new TreeItem(TimerConstants.TREE_VIEW_HEADER);
 			rootItem.getChildren().addAll(tasks);
 			jfxTreeView.setRoot(rootItem);
 			btnNext.setDisable(true);

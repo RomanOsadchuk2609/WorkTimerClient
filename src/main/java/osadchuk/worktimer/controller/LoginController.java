@@ -237,10 +237,10 @@ public class LoginController {
 				log.debug("JSESSIONID = {}", Utils.JSESSIONID);
 				List<NameValuePair> parameters = new ArrayList<>();
 				parameters.add(new BasicNameValuePair(TimerConstants.USERNAME, loginTextField.getText()));
-				response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "api/simple_tasks/by_username", parameters, Utils.JSESSIONID);
+				response = HTTPRequest.getResponseFromGet(Utils.serverIpAddress + "api/simple_tasks/by_username", parameters, Utils.JSESSIONID);
 				log.debug("api/simple_tasks/by_username response: {}", response);
 
-				if (response.equals("302") || response.equals("401")) {
+				if (response == null || response.equals("302") || response.equals("401")) {
 					isAuthorized = false;
 					return;
 				} else {

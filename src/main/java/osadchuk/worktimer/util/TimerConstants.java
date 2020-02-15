@@ -9,6 +9,7 @@ public class TimerConstants {
     public static final String OKAY = "Okay";
     public static final String NOT_SENT_DATA = "notSentData";
     public static final String REFRESH = "Refresh";
+    public static final String TREE_VIEW_HEADER = "Tasks";
 
     public static final class APP {
         private APP(){}

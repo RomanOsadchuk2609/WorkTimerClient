@@ -4,37 +4,37 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class SimpleTask implements Serializable {
+    private long id;
+    private String name;
+    private long userId;
+    private String username;
     private long projectId;
     private String projectName;
-    private long taskId;
-    private String taskName;
     private boolean hasSubtask;
     private long parentTaskId;
-    private long performerId;
-    private String username;
 
     public SimpleTask() {
     }
 
-    public SimpleTask(long projectId, String projectName, long taskId, String taskName,
-                      long performerId, String username) {
+    public SimpleTask(long projectId, String projectName, long id, String name,
+                      long userId, String username) {
         this.projectId = projectId;
         this.projectName = projectName;
-        this.taskId = taskId;
-        this.taskName = taskName;
-        this.performerId = performerId;
+        this.id = id;
+        this.name = name;
+        this.userId = userId;
         this.username = username;
     }
 
-    public SimpleTask(long projectId, String projectName, long taskId, String taskName,
-                      boolean hasSubtask, long parentTaskId, long performerId, String username) {
+    public SimpleTask(long projectId, String projectName, long id, String name,
+                      boolean hasSubtask, long parentTaskId, long userId, String username) {
         this.projectId = projectId;
         this.projectName = projectName;
-        this.taskId = taskId;
-        this.taskName = taskName;
+        this.id = id;
+        this.name = name;
         this.hasSubtask = hasSubtask;
         this.parentTaskId = parentTaskId;
-        this.performerId = performerId;
+        this.userId = userId;
         this.username = username;
     }
 
@@ -44,19 +44,19 @@ public class SimpleTask implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         SimpleTask that = (SimpleTask) o;
         return projectId == that.projectId &&
-                taskId == that.taskId &&
+                id == that.id &&
                 hasSubtask == that.hasSubtask &&
                 parentTaskId == that.parentTaskId &&
-                performerId == that.performerId &&
+                userId == that.userId &&
                 Objects.equals(projectName, that.projectName) &&
-                Objects.equals(taskName, that.taskName) &&
+                Objects.equals(name, that.name) &&
                 Objects.equals(username, that.username);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(projectId, projectName, taskId, taskName, performerId, username);
+        return Objects.hash(projectId, projectName, id, name, userId, username);
     }
 
     public long getProjectId() {
@@ -75,28 +75,28 @@ public class SimpleTask implements Serializable {
         this.projectName = projectName;
     }
 
-    public long getTaskId() {
-        return taskId;
+    public long getId() {
+        return id;
     }
 
-    public void setTaskId(long taskId) {
-        this.taskId = taskId;
+    public void setId(long id) {
+        this.id = id;
     }
 
-    public String getTaskName() {
-        return taskName;
+    public String getName() {
+        return name;
     }
 
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public long getPerformerId() {
-        return performerId;
+    public long getUserId() {
+        return userId;
     }
 
-    public void setPerformerId(long performerId) {
-        this.performerId = performerId;
+    public void setUserId(long userId) {
+        this.userId = userId;
     }
 
     public String getUsername() {

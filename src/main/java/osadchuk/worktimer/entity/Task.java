@@ -1,45 +1,51 @@
 package osadchuk.worktimer.entity;
 
 public class Task {
-    long id;
-    String taskName;
-    long performerId;
+	private long id;
+	private String taskName;
+	private long userId;
 
-    public Task(long id, String taskName, long performerId) {
-        this.id = id;
-        this.taskName = taskName;
-        this.performerId = performerId;
-    }
+	public Task(long id, String taskName, long userId) {
+		this.id = id;
+		this.taskName = taskName;
+		this.userId = userId;
+	}
 
-    public Task() {
-    }
+	public Task(SimpleTask simpleTask) {
+		this.id = simpleTask.getId();
+		this.taskName = simpleTask.getName();
+		this.userId = simpleTask.getUserId();
+	}
 
-    public long getId() {
-        return id;
-    }
+	public Task() {
+	}
 
-    public void setId(long id) {
-        this.id = id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public String getTaskName() {
-        return taskName;
-    }
+	public void setId(long id) {
+		this.id = id;
+	}
 
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
-    }
+	public String getTaskName() {
+		return taskName;
+	}
 
-    public long getPerformerId() {
-        return performerId;
-    }
+	public void setTaskName(String taskName) {
+		this.taskName = taskName;
+	}
 
-    public void setPerformerId(long performerId) {
-        this.performerId = performerId;
-    }
+	public long getUserId() {
+		return userId;
+	}
 
-    @Override
-    public String toString() {
-        return taskName;
-    }
+	public void setUserId(long userId) {
+		this.userId = userId;
+	}
+
+	@Override
+	public String toString() {
+		return taskName;
+	}
 }
