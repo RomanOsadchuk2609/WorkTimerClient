@@ -71,22 +71,18 @@ public class HomeController {
 	@FXML
 	private JFXTreeView<?> jfxTreeView;
 	@FXML
-	private JFXButton btnNext, btnSearch, chatButtonBack;
+	private JFXButton btnNext;
 	@FXML
 	private Hyperlink logOutLink;
 	@FXML
-	private Label labelTaskChoose, labelNoTasks, labelNoUsers, labelWorkStarted,
-			labelUsername, labelTime, labelTask, labelStartTime, labelTaskName, chatUsernameLabel;
+	private Label labelTaskChoose, labelNoTasks, labelWorkStarted,
+			labelUsername, labelTime, labelStartTime, labelTaskName;
 	@FXML
 	private ImageView userImage, screenView;
 	@FXML
-	private JFXTextField usernameSearchTextField;
-	@FXML
 	private StackPane stackPane;
 	@FXML
-	private JFXListView<JFXToolbar> foundUsersList;
-	@FXML
-	private AnchorPane peopleAnchorPane, timerPane, chatPane;
+	private AnchorPane peopleAnchorPane, timerPane;
 
 	private TreeViewHelper treeViewHelper;
 	private String lastSearchedUsername = "";
@@ -144,17 +140,6 @@ public class HomeController {
 		vbox.setFocusTraversable(false);
 		jfxTreeView.setFocusTraversable(false);
 
-		List<PrimitiveUser> primitiveUsers = new ArrayList<>(Arrays.asList(
-				new PrimitiveUser(2, "user 1"),
-				new PrimitiveUser(3, "user 2"),
-				new PrimitiveUser(4, "user 3"),
-				new PrimitiveUser(5, "user 4"),
-				new PrimitiveUser(6, "user 5"),
-				new PrimitiveUser(7, "user 6"),
-				new PrimitiveUser(8, "user 7"),
-				new PrimitiveUser(9, "user 8")
-		));
-		showFoundUsers(primitiveUsers);
 		at.start();
 	}
 
@@ -215,8 +200,9 @@ public class HomeController {
 					if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 60 * 1.5) {
 						isCheating = true;
 						punishCheater();
-//					} else if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 60) {
-					} else if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 15) {
+					} else if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 60) {
+						//TODO: extract time into property
+//					} else if (screenTime.getTime() - lastStopRequestTime.getTime() > 1000 * 15) {
 						//Sending POST request about finishing work
 						lastStopRequestTime = screenTime;
 						Date endDate = getWorkedDate(startDate);
@@ -228,7 +214,8 @@ public class HomeController {
 
 						String response = null;
 						try {
-							response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_STOP, parametersPost, Utils.JSESSIONID);
+							response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_STOP,
+									parametersPost, Utils.JSESSIONID);
 							log.debug("time_log/stop Response: {}", response);
 						} catch (IOException | URISyntaxException e) {
 							log.error("Could not stop time log. ", e);
@@ -244,17 +231,21 @@ public class HomeController {
 							Date date = new Date();
 							List<NameValuePair> parametersPost = new ArrayList<>();
 							parametersPost.add(new BasicNameValuePair("time_log_id", String.valueOf(timerId)));
-							parametersPost.add(new BasicNameValuePair("screenshot", screenShotBase64 != null ? screenShotBase64 : lastScreenShotBase64));
+							parametersPost.add(new BasicNameValuePair("screenshot", screenShotBase64 != null
+									? screenShotBase64
+									: lastScreenShotBase64));
 							parametersPost.add(new BasicNameValuePair("date", String.valueOf(date.getTime())));
 							if (screenShotBase64 != null) {
-								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "time_log/save_screenshot", parametersPost, Utils.JSESSIONID);
+								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "time_log/save_screenshot",
+										parametersPost, Utils.JSESSIONID);
 								validateResponse(response, date);
 								if (randomScreenshot) {
 									screenShotInterval = Math.random() * initialScreenshotInterval;
 								}
 								lastScreenShotTime = screenTime;
 							} else {
-								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "time_log/save_screenshot", parametersPost, Utils.JSESSIONID);
+								String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + "time_log/save_screenshot",
+										parametersPost, Utils.JSESSIONID);
 								validateResponse(response, date);
 								log.debug(Utils.IDENTICAL_SCREENSHOTS);
 							}
@@ -301,7 +292,8 @@ public class HomeController {
 				log.debug("StartTime: {}", startTime);
 				String response = null;
 				try {
-					response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_START, parametersGet, Utils.JSESSIONID);
+					response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_START,
+							parametersGet, Utils.JSESSIONID);
 					Pattern number = Pattern.compile("\\d+");
 					boolean isNumber = false;
 					if (response != null) {
@@ -328,7 +320,8 @@ public class HomeController {
 				parametersPost.add(new BasicNameValuePair("time_log_id", String.valueOf(timerId)));
 				parametersPost.add(new BasicNameValuePair("end_time", String.valueOf(endDate.getTime())));
 
-				String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_STOP, parametersPost, Utils.JSESSIONID);
+				String response = HTTPRequest.getResponseFromPost(Utils.serverIpAddress + TimerConstants.URL.TIME_LOG_STOP,
+						parametersPost, Utils.JSESSIONID);
 				log.debug("time_log/stop Response: {}", response);
 				Pattern number = Pattern.compile("\\d+");
 				boolean isNumber = false;
@@ -368,74 +361,8 @@ public class HomeController {
 		stage.show();
 	}
 
-	@FXML
-	void onClickBtnSearch(ActionEvent event) {
-        /*if (usernameSearchTextField.getText().isEmpty() || lastSearchedUsername.equals(usernameSearchTextField.getText())){
-            return;
-        }
-        List<PrimitiveUser> primitiveUsers = null;
-        try {
-
-            List<NameValuePair> parameters = new ArrayList<>();
-            lastSearchedUsername = usernameSearchTextField.getText();
-            parameters.add(new BasicNameValuePair("username", lastSearchedUsername));
-            String response = HTTPRequest.getResponseFromGet(Utils.serverIpAddress+"timer/get_users_by_username", parameters,Utils.JSESSIONID);
-            primitiveUsers = Utils.getListOfPrimitiveUsersFromJson(response);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        showFoundUsers(primitiveUsers);*/
-	}
-
 	private void refresh() throws IOException, URISyntaxException {
 		Utils.updateSimpleTaskList(true);
-	}
-
-	private void showFoundUsers(List<PrimitiveUser> primitiveUsers) {
-		foundUsersList.getItems().clear();
-		if (primitiveUsers == null || primitiveUsers.isEmpty()) {
-			labelNoUsers.setVisible(true);
-			foundUsersList.setVisible(false);
-		} else {
-			labelNoUsers.setVisible(false);
-			foundUsersList.setVisible(true);
-			for (PrimitiveUser primitiveUser : primitiveUsers) {
-				JFXToolbar toolbar = new JFXToolbar();
-
-                /*File file = new File("../img/default_user_avatar.png");
-                Image image = new Image(file.toURI().toString());*/
-				//Image image = Utils.getImageFromBase64(primitiveUser.getBase64photo(),30,30);
-				ImageView imageViewLeft = new ImageView(Utils.userIcon);
-				imageViewLeft.setFitWidth(30);
-				imageViewLeft.setFitHeight(30);
-				Circle circle = new Circle(15);
-				circle.setCenterX(15);
-				circle.setCenterY(15);
-				imageViewLeft.setClip(circle);
-				toolbar.setLeftItems(imageViewLeft);
-
-				Label labelCenter = new Label(primitiveUser.getName());
-				labelCenter.setAlignment(Pos.CENTER_LEFT);
-				labelCenter.setStyle("-fx-pref-width: 245");
-
-				toolbar.setCenter(labelCenter);
-
-				toolbar.setStyle(".jfx-tool-bar-list-item");
-
-				toolbar.setOnMouseClicked(event -> {
-					chatPane.setVisible(true);
-					chatUsernameLabel.setText(labelCenter.getText());
-				});
-				foundUsersList.getItems().add(toolbar);
-			}
-		}
-	}
-
-	@FXML
-	void obClickChatButtonBack(ActionEvent event) {
-		chatPane.setVisible(false);
 	}
 
 	public void showTaskTreeView() {
@@ -482,8 +409,6 @@ public class HomeController {
 
 		try {
 			ImageIO.write(screenShot, "jpg", bos);
-
-			//ImageIO.write(screenShot, "png", new File("temp.png"));
 			byte[] imageBytes = bos.toByteArray();
 			BASE64Encoder encoder = new BASE64Encoder();
 			imageString = encoder.encode(imageBytes);
