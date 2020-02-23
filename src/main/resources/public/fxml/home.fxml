@@ -54,7 +54,7 @@
             </Label>
             <VBox fx:id="vbox" layoutY="25.0" prefHeight="320.0" prefWidth="325.0" style="-fx-border-color: white;">
                <children>
-                  <JFXTreeView fx:id="jfxTreeView" prefHeight="295.0" prefWidth="323.0" style="-fx-border-color: white;" />
+                  <JFXTreeView fx:id="jfxTreeView" prefHeight="320.0" prefWidth="323.0" style="-fx-border-color: white;" />
                </children>
             </VBox>
             <Label fx:id="labelNoTasks" alignment="CENTER" contentDisplay="CENTER" layoutY="147.0" prefWidth="325.0" style="-fx-text-fill: grey;" text="You don't have any task!" visible="false">
